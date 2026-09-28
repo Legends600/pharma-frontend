@@ -1,0 +1,72 @@
+<section class="page">
+  <header class="page-header">
+    <h2>Clientes</h2>
+    <a routerLink="nuevo" class="btn btn-primary">+ Nuevo cliente</a>
+  </header>
+
+  <div class="herramientas">
+    <input class="input buscador" placeholder="Buscar por DNI, nombres o apellidos…"
+           [value]="filtro()" (input)="filtro.set($any($event.target).value)" />
+    <label class="tamanio">
+      Mostrar
+      <select class="input" (change)="cambiarTamanio($any($event.target).value)">
+        @for (t of tamanios; track t) {
+          <option [value]="t" [selected]="t === tamanio()">{{ t }}</option>
+        }
+      </select>
+      por página
+    </label>
+  </div>
+
+  @if (error()) {
+    <div class="alerta">{{ error() }}</div>
+  }
+
+  @if (cargando()) {
+    <p>Cargando clientes…</p>
+  } @else {
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>
+            <button type="button" class="orden" (click)="ordenar('dni')">DNI {{ indicadorOrden('dni') }}</button>
+          </th>
+          <th>
+            <button type="button" class="orden" (click)="ordenar('apellidos')">
+              Apellidos y nombres {{ indicadorOrden('apellidos') }}
+            </button>
+          </th>
+          <th>Correo</th>
+          <th>Teléfono</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (c of filtrados(); track c.id) {
+          <tr>
+            <td>{{ c.dni }}</td>
+            <td>{{ c.apellidos }}, {{ c.nombres }}</td>
+            <td>{{ c.email }}</td>
+            <td>{{ c.telefono ?? '—' }}</td>
+            <td>
+              <span class="badge" [class.inactivo]="!c.estado">{{ c.estado ? 'Activo' : 'Inactivo' }}</span>
+            </td>
+            <td class="acciones">
+              <a [routerLink]="[c.id, 'editar']" class="btn">Editar</a>
+              <button type="button" class="btn btn-peligro" (click)="darDeBaja(c)">Dar de baja</button>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="6" class="vacio">No hay clientes registrados.</td></tr>
+        }
+      </tbody>
+    </table>
+  }
+
+  <footer class="paginacion">
+    <button type="button" class="btn" [disabled]="esPrimera() || cargando()" (click)="anterior()">Anterior</button>
+    <span>Página {{ pagina() + 1 }} de {{ totalPaginas() }} · {{ respuesta()?.totalElementos ?? 0 }} clientes</span>
+    <button type="button" class="btn" [disabled]="esUltima() || cargando()" (click)="siguiente()">Siguiente</button>
+  </footer>
+</section>
