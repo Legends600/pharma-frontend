@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Informe de arquitectura · PharmaSoft</title>
+<style>
+  @page { size: A4; margin: 16mm 15mm 16mm 15mm; }
+  * { box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 9.6pt; line-height: 1.42; color: #1f2937; margin: 0; }
+  h1 { font-size: 16pt; color: #0f2e5c; margin: 0 0 2px; }
+  h2 { font-size: 11.5pt; color: #0f2e5c; margin: 12px 0 5px; padding-bottom: 2px; border-bottom: 1.5px solid #0f2e5c; }
+  h3 { font-size: 10pt; margin: 8px 0 3px; color: #0f2e5c; }
+  p { margin: 3px 0 6px; text-align: justify; }
+  .sub { color: #475569; font-size: 9pt; margin-bottom: 8px; }
+  table { width: 100%; border-collapse: collapse; margin: 4px 0 8px; font-size: 8.4pt; }
+  th, td { border: 1px solid #cbd5e1; padding: 3px 5px; vertical-align: top; text-align: left; }
+  th { background: #0f2e5c; color: #fff; font-weight: 600; }
+  tr:nth-child(even) td { background: #f8fafc; }
+  code, pre { font-family: Consolas, 'Cascadia Mono', monospace; font-size: 8pt; }
+  code { background: #eef2f8; padding: 0 3px; border-radius: 3px; }
+  pre { background: #0f172a; color: #e2e8f0; padding: 6px 8px; border-radius: 6px; margin: 4px 0 8px; white-space: pre-wrap; line-height: 1.3; }
+  .cols { display: grid; grid-template-columns: 1fr 1.25fr; gap: 12px; align-items: start; }
+  .nota { font-size: 8.4pt; color: #475569; }
+  ol.preguntas > li { margin-bottom: 6px; text-align: justify; }
+  .salto { break-before: page; }
+  .evid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; }
+  .evid figure { margin: 0; break-inside: avoid; border: 1px solid #cbd5e1; border-radius: 6px; padding: 5px; }
+  .evid img { width: 100%; display: block; border-radius: 3px; }
+  .evid figcaption { font-size: 7.6pt; margin-top: 3px; }
+  .evid figcaption b { color: #0f2e5c; }
+  .red { font-family: Consolas, monospace; font-size: 7pt; background: #f1f5f9; border-radius: 3px; padding: 2px 4px; margin-top: 2px; }
+  .ok { color: #166534; font-weight: 700; }
+  .ko { color: #b42318; font-weight: 700; }
+  svg text { font-family: 'Segoe UI', sans-serif; }
+</style>
+</head>
+<body>
+
+<h1>Informe técnico de arquitectura — SPA PharmaSoft</h1>
+<div class="sub">
+  Lenguaje de Programación II · Actividad autónoma, Sesión 7 · Autor: Tineo ·
+  Repositorio: <b>github.com/Legends600/pharma-frontend</b> · Rama: <code>feature/clientes-tineo</code> ·
+  Pull request hacia <code>develop</code>: <b>https://github.com/Legends600/pharma-frontend/pull/1</b>
+</div>
+
+<p>
+Este informe revisa la arquitectura de PharmaSoft (Angular 22) después de agregar el módulo <b>Clientes</b>
+sobre la base construida en el Reto 01 (<b>Categorías</b>). Todas las citas usan el formato
+<code>archivo:línea</code> y corresponden al código de la rama <code>feature/clientes-tineo</code>.
+</p>
+
+<h2>B1. Estructura del proyecto</h2>
+<div class="cols">
+<pre>src/app
+├── app.config.ts · app.routes.ts · app.ts
+├── core/
+│   ├── config/menu.ts
+│   ├── models/error-response.ts
+│   ├── models/pagina-response.ts   (nuevo)
+│   └── utils/http-error.ts
+├── shared/pages/no-encontrado/no-encontrado.ts
+├── layout/
+│   ├── main-layout/  (ts, html, css)
+│   ├── header/       (ts, html, css)
+│   └── sidebar/      (ts, html, css)
+└── features/
+    ├── inicio/       (ts, html)
+    ├── categorias/
+    │   ├── categorias.routes.ts
+    │   ├── models/categoria.model.ts
+    │   ├── services/categoria-service.ts
+    │   └── pages/categoria-list/ · categoria-form/
+    └── clientes/                   (nuevo)
+        ├── clientes.routes.ts
+        ├── models/cliente.model.ts
+        ├── services/cliente-service.ts
+        └── pages/cliente-list/ · cliente-form/</pre>
+<div>
+<p><b>core</b> contiene piezas únicas para toda la aplicación y sin interfaz: la configuración del menú
+(<code>MENU</code>), los modelos comunes que reflejan DTO genéricos del backend (<code>ErrorResponse</code>,
+<code>PaginaResponse&lt;T&gt;</code>) y utilidades como <code>mensajeError()</code>. Ningún archivo de core
+conoce un módulo de negocio concreto.</p>
+<p><b>shared</b> guarda componentes y páginas reutilizables que no pertenecen a un módulo, por ahora la
+página 404. <b>layout</b> es el marco visual fijo (encabezado, menú bar, sidebar y el contenedor
+<code>MainLayout</code>). <b>features</b> tiene una carpeta por tabla o proceso del negocio; cada una repite
+la misma forma interna: <code>models</code> (contrato con la API), <code>services</code> (HTTP),
+<code>pages</code> (pantallas) y su propio archivo de rutas. Por eso Clientes es una carpeta
+<i>nueva</i> con exactamente la misma estructura que Categorías.</p>
+</div>
+</div>
+
+<h2>B2. Mapa de rutas</h2>
+<table>
+  <tr><th>Ruta (URL)</th><th>Componente</th><th>¿Ruta padre?</th><th>Tipo de carga</th><th>Título</th></tr>
+  <tr><td><code>/</code></td><td>— (redirige a <code>/inicio</code>)</td><td>MainLayout</td><td>redirectTo, pathMatch full</td><td>—</td></tr>
+  <tr><td><code>/inicio</code></td><td>Inicio</td><td>MainLayout</td><td>loadComponent (diferida)</td><td>Inicio</td></tr>
+  <tr><td><code>/categorias</code></td><td>CategoriaList</td><td>MainLayout</td><td>loadChildren (diferida) → CATEGORIAS_ROUTES</td><td>Categorías</td></tr>
+  <tr><td><code>/categorias/nuevo</code></td><td>CategoriaForm</td><td>MainLayout</td><td>loadChildren (mismo chunk)</td><td>Nueva categoría</td></tr>
+  <tr><td><code>/categorias/:id/editar</code></td><td>CategoriaForm</td><td>MainLayout</td><td>loadChildren (mismo chunk)</td><td>Editar categoría</td></tr>
+  <tr><td><code>/clientes</code></td><td>ClienteList</td><td>MainLayout</td><td>loadChildren (diferida) → CLIENTES_ROUTES</td><td>Clientes</td></tr>
+  <tr><td><code>/clientes/nuevo</code></td><td>ClienteForm</td><td>MainLayout</td><td>loadChildren (mismo chunk)</td><td>Nuevo cliente</td></tr>
+  <tr><td><code>/clientes/:id/editar</code></td><td>ClienteForm</td><td>MainLayout</td><td>loadChildren (mismo chunk)</td><td>Editar cliente</td></tr>
+  <tr><td><code>/**</code></td><td>NoEncontrado</td><td>No (fuera del layout)</td><td>loadComponent (diferida)</td><td>Página no encontrada</td></tr>
+</table>
+<p class="nota">Fuente: <code>app.routes.ts:4-33</code>, <code>categorias.routes.ts</code> y <code>clientes.routes.ts</code>.
+El parámetro <code>:id</code> llega al formulario como <code>input()</code> gracias a <code>withComponentInputBinding()</code> en <code>app.config.ts</code>.</p>
+
+<h2>B3. Responsabilidades</h2>
+<table>
+  <tr><th style="width:15%">Pieza</th><th style="width:10%">Tipo</th><th style="width:40%">Responsabilidad</th><th>Qué no hace</th></tr>
+  <tr><td>CategoriaService</td><td>Servicio</td><td>Único punto que conoce <code>/api/v1/categorias</code>; expone listar, obtener, crear, actualizar y eliminar como <code>Observable</code> tipados.</td><td>No guarda estado, no muestra mensajes, no navega ni decide qué hacer ante un error.</td></tr>
+  <tr><td>CategoriaList</td><td>Componente</td><td>Mantiene en signals la lista, carga, error y filtro; filtra con <code>computed</code>; confirma y elimina quitando la fila localmente.</td><td>No arma URL ni usa <code>HttpClient</code>; no valida datos de negocio (eso lo hace el backend).</td></tr>
+  <tr><td>CategoriaForm</td><td>Componente</td><td>Formulario reactivo para registrar y editar (según exista <code>id</code>); valida como el DTO y muestra errores 400/409.</td><td>No lista categorías ni conoce la URL; no decide si el nombre está repetido (lo responde el backend con 409).</td></tr>
+  <tr><td>ClienteService</td><td>Servicio</td><td>Comunicarse con <code>/api/v1/clientes</code>; <code>listar()</code> arma <code>HttpParams</code> (página, tamaño, orden, dirección) y devuelve <code>PaginaResponse&lt;Cliente&gt;</code>.</td><td>No muestra mensajes ni navega entre páginas; no guarda la página actual ni filtra por texto.</td></tr>
+  <tr><td>ClienteList</td><td>Componente</td><td>Guarda en signals página, tamaño, campo y dirección de orden; un <code>effect</code> vuelve a llamar a <code>listar()</code> cuando cambian; pagina, ordena, filtra la página actual con <code>computed</code> y da de baja con confirmación, recargando la página.</td><td>No construye query strings ni conoce la URL; no elimina la fila de la tabla (la baja es lógica y el estado lo decide el backend).</td></tr>
+  <tr><td>ClienteForm</td><td>Componente</td><td>Registrar y editar con validadores equivalentes al <code>ClienteRequestDTO</code>; convierte opcionales vacíos en <code>null</code>; muestra errores del backend por campo y generales.</td><td>No comprueba si el DNI o el correo existen (409 del backend); no actualiza la tabla directamente: navega al listado, que vuelve a consultar.</td></tr>
+  <tr><td>MainLayout</td><td>Componente</td><td>Une encabezado, sidebar y <code>&lt;router-outlet&gt;</code> con CSS Grid; guarda el signal <code>menuColapsado</code>.</td><td>No sabe qué módulos existen ni carga datos; no dibuja el contenido de cada página.</td></tr>
+  <tr><td>Header</td><td>Componente</td><td>Muestra la marca, el menú bar y emite <code>toggleMenu</code> con <code>output()</code>.</td><td>No oculta el sidebar por sí mismo; solo avisa y el layout decide.</td></tr>
+  <tr><td>Sidebar</td><td>Componente</td><td>Recorre <code>MENU</code> con <code>@for</code> y resalta la opción activa con <code>routerLinkActive</code>.</td><td>No define las opciones (están en <code>menu.ts</code>) ni las rutas (están en <code>app.routes.ts</code>).</td></tr>
+  <tr><td>http-error.ts</td><td>Utilidad</td><td>Traduce cualquier <code>HttpErrorResponse</code> a un texto legible y extrae <code>validationErrors</code>.</td><td>No muestra el mensaje; cada componente decide dónde pintarlo.</td></tr>
+</table>
+
+<h2>B4. Flujo de la operación «Registrar cliente»</h2>
+<svg viewBox="0 0 760 330" width="100%" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker>
+    <marker id="r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#b42318"/></marker>
+  </defs>
+  <!-- participantes -->
+  <g font-size="11" font-weight="600" text-anchor="middle" fill="#fff">
+    <rect x="10" y="6" width="100" height="30" rx="6" fill="#0f2e5c"/><text x="60" y="25">Usuario</text>
+    <rect x="150" y="6" width="120" height="30" rx="6" fill="#0f2e5c"/><text x="210" y="25">ClienteForm</text>
+    <rect x="310" y="6" width="120" height="30" rx="6" fill="#0f2e5c"/><text x="370" y="25">ClienteService</text>
+    <rect x="470" y="6" width="130" height="30" rx="6" fill="#0f2e5c"/><text x="535" y="25">Practica (API)</text>
+    <rect x="640" y="6" width="110" height="30" rx="6" fill="#0f2e5c"/><text x="695" y="25">ClienteList</text>
+  </g>
+  <g stroke="#94a3b8" stroke-dasharray="4 4">
+    <line x1="60" y1="36" x2="60" y2="325"/><line x1="210" y1="36" x2="210" y2="325"/>
+    <line x1="370" y1="36" x2="370" y2="325"/><line x1="535" y1="36" x2="535" y2="325"/><line x1="695" y1="36" x2="695" y2="325"/>
+  </g>
+  <g font-size="9.5" fill="#1f2937">
+    <line x1="60" y1="58" x2="208" y2="58" stroke="#334155" marker-end="url(#f)"/><text x="64" y="53">1. clic «Registrar» (ngSubmit)</text>
+    <rect x="214" y="64" width="150" height="28" fill="#eef2f8" stroke="#cbd5e1"/>
+    <text x="218" y="76">2. guardar(): form válido →</text><text x="218" y="88">dto (telefono "" → null)</text>
+    <line x1="210" y1="106" x2="368" y2="106" stroke="#334155" marker-end="url(#f)"/><text x="214" y="101">3. crear(dto) + guardando.set(true)</text>
+    <line x1="370" y1="126" x2="533" y2="126" stroke="#334155" marker-end="url(#f)"/><text x="374" y="121">4. POST /api/v1/clientes (JSON)</text>
+    <rect x="540" y="132" width="150" height="28" fill="#eef2f8" stroke="#cbd5e1"/>
+    <text x="544" y="144">5. @Valid + reglas: DNI y</text><text x="544" y="156">correo únicos → INSERT</text>
+    <line x1="535" y1="174" x2="212" y2="174" stroke="#166534" marker-end="url(#f)"/><text x="300" y="169" fill="#166534" font-weight="700">6a. 201 Created + ClienteResponseDTO (Observable next)</text>
+    <line x1="210" y1="196" x2="693" y2="196" stroke="#334155" marker-end="url(#f)"/><text x="214" y="191">7a. router.navigate(['/clientes'])</text>
+    <rect x="560" y="202" width="130" height="40" fill="#eef2f8" stroke="#cbd5e1"/>
+    <text x="564" y="214">8a. effect → cargar():</text><text x="564" y="226">GET ?pagina=0… 200</text><text x="564" y="238">respuesta.set(página)</text>
+    <line x1="695" y1="256" x2="62" y2="256" stroke="#334155" marker-end="url(#f)"/><text x="300" y="251">9a. @for (filtrados()) dibuja la nueva fila en la tabla</text>
+    <!-- variante 409 -->
+    <rect x="72" y="266" width="620" height="58" fill="#fef3f2" stroke="#b42318" stroke-dasharray="5 3" rx="6"/>
+    <text x="80" y="280" fill="#b42318" font-weight="700">Variante 409 (DNI o correo repetido)</text>
+    <line x1="535" y1="292" x2="212" y2="292" stroke="#b42318" marker-end="url(#r)"/><text x="300" y="288" fill="#b42318">6b. 409 Conflict + ErrorResponse {message}</text>
+    <text x="80" y="306">7b. error(): guardando.set(false) · error.set(mensajeError(err)) · erroresServidor.set(erroresDeValidacion(err))</text>
+    <text x="80" y="319">8b. @if (error()) muestra la alerta roja con el mensaje del backend; no hay navegación y el formulario conserva los datos.</text>
+  </g>
+</svg>
+<p class="nota">Código del flujo: <code>cliente-form.ts:65-94</code> (validación, <code>dto</code> con <code>|| null</code> en líneas 76-77,
+<code>subscribe</code> con <code>next</code> en línea 87 y <code>error</code> en líneas 88-92) y <code>cliente-list.ts:48-57</code> (el <code>effect</code> que vuelve a consultar).
+En los casos 5 y 6 del anexo se observa cada variante con su código HTTP.</p>
+
+<h2>B5. Preguntas de revisión</h2>
+<ol class="preguntas">
+<li><b>Archivos existentes modificados.</b> Solo dos: <code>app.routes.ts</code> (líneas 20-24, la ruta <code>clientes</code> con
+<code>loadChildren</code>) y <code>core/config/menu.ts</code> (línea 10, una sola línea en <code>MENU</code>). Además se agregó un archivo
+nuevo en core, <code>core/models/pagina-response.ts</code>, y la carpeta <code>features/clientes</code>. <code>git diff develop..feature/clientes-tineo</code>
+no muestra ningún cambio en <code>features/categorias</code> ni en <code>layout</code>. El número dice que la arquitectura está
+<i>abierta a la extensión y cerrada a la modificación</i>: crecer significa agregar archivos, no reescribir los que ya funcionan.</li>
+
+<li><b>¿Por qué el listado no usa HttpClient?</b> <code>ClienteList</code> solo inyecta <code>ClienteService</code> (<code>cliente-list.ts:19</code>)
+y le pide datos con parámetros de negocio (página, orden). La URL existe en un único lugar: la base en <code>environments/environment.ts:2</code>
+y el recurso en <code>cliente-service.ts:11</code>. Si mañana cambia la URL de la API se edita <code>environment.ts</code> (o una línea del servicio si
+cambia el recurso) y ningún componente se toca. Además el componente puede probarse sustituyendo el servicio por uno falso.</li>
+
+<li><b>Ventaja de <code>loadChildren</code>.</b> El código de Clientes se empaqueta en un chunk aparte que el navegador descarga solo al entrar a
+<code>/clientes</code>, así la carga inicial no crece con cada módulo. Salida de <code>ng build</code>:<br>
+<code>chunk-BTt5Y0il.js | clientes-routes | 12.25 kB | 3.77 kB</code><br>
+mientras el bundle inicial (<code>main</code>, 265.94 kB) no incluye ClienteList ni ClienteForm. Si se importaran los componentes en
+<code>app.routes.ts</code>, pasarían al chunk <code>main</code> y todos los usuarios los descargarían aunque nunca entren al módulo.</li>
+
+<li><b>¿Por qué el encabezado y el sidebar no se redibujan?</b> Porque <code>/categorias</code> y <code>/clientes</code> son hijos de la
+misma ruta padre con <code>component: MainLayout</code> (<code>app.routes.ts:6-8</code>). Al navegar entre hermanos, el router reutiliza la
+instancia de <code>MainLayout</code> y solo cambia lo que hay dentro de su <code>&lt;router-outlet /&gt;</code> (<code>main-layout.html:5</code>);
+<code>&lt;app-header&gt;</code> y <code>&lt;app-sidebar&gt;</code> (líneas 2-3) quedan fuera del outlet. Por eso el signal <code>menuColapsado</code> conserva su valor.</li>
+
+<li><b>Ocultar «Clientes» según permisos (sesión 11).</b> El cambio visible se hace en <code>core/config/menu.ts</code>: agregar a <code>MenuItem</code>
+un campo como <code>permisos?: string[]</code> y filtrar <code>MENU</code> con los permisos del usuario (por ejemplo un <code>computed</code> que
+<code>Sidebar</code> recorre en lugar del arreglo fijo, <code>sidebar.ts</code>). Basta con ese punto para el menú porque el sidebar nunca escribe
+opciones a mano, las obtiene solo de <code>MENU</code>. Ocultar no es proteger: además hará falta un guard en la ruta <code>clientes</code> de
+<code>app.routes.ts</code> y la validación del JWT en el backend.</li>
+
+<li><b>Código duplicado y cómo reutilizarlo.</b> Se repite: (a) el patrón de servicio CRUD (<code>obtener/crear/actualizar/eliminar</code> son
+iguales en <code>categoria-service.ts</code> y <code>cliente-service.ts</code>, solo cambia el recurso); (b) en los listados, los signals
+<code>cargando/error/filtro</code> y el manejo de <code>subscribe</code> con <code>mensajeError</code>; (c) en los formularios, el flujo
+<code>guardar()</code> crear-o-actualizar, la alerta y los mensajes por campo, y el CSS del formulario (mismas reglas en
+<code>categoria-form.css</code> y <code>cliente-form.css</code>). Propuesta: una clase genérica <code>CrudHttpService&lt;T, TReq&gt;</code> en
+core que reciba el recurso y de la que hereden ambos servicios; componentes en <code>shared</code> como <code>&lt;app-alerta&gt;</code>,
+<code>&lt;app-paginador&gt;</code> (que emita cambios de página y tamaño, reutilizable en productos y ventas) y <code>&lt;app-badge-estado&gt;</code>;
+y mover los estilos de formulario a <code>styles.css</code>.</li>
+
+<li><b>¿Por qué el buscador solo filtra la página actual?</b> El <code>computed</code> <code>filtrados</code> (<code>cliente-list.ts:36-42</code>)
+trabaja sobre <code>respuesta()?.contenido</code>, que solo contiene los N registros de la página que devolvió el backend; los demás
+clientes nunca llegaron al navegador. Para buscar entre todos, el backend debe aceptar un parámetro, por ejemplo
+<code>?buscar=texto</code>, y filtrar en la consulta paginada (un método de repositorio o una <code>Specification</code> con
+<code>LIKE</code> sobre <code>dni</code>, <code>nombres</code> y <code>apellidos</code>, sin distinguir mayúsculas) antes de paginar, para que
+<code>totalElementos</code> y <code>totalPaginas</code> correspondan a los resultados. En <code>ClienteService.listar()</code> se agregaría
+<code>.set('buscar', texto)</code> a los <code>HttpParams</code>, y en <code>ClienteList</code> el filtro pasaría a ser un parámetro más del
+<code>effect</code> (con un pequeño retardo para no consultar en cada tecla) y volvería a la página 0 al cambiar.</li>
+</ol>
+
+<h2>Versionamiento</h2>
+<p>Flujo seguido: <code>feature/spa-categorias-tineo</code> se fusionó en <code>develop</code> y desde ahí se creó
+<code>feature/clientes-tineo</code>, con los commits <i>feat(clientes): listar clientes paginados con búsqueda por DNI</i>,
+<i>feat(clientes): registrar y editar con validaciones</i> y <i>docs: agregar informe de arquitectura</i>. La solicitud de incorporación
+hacia <code>develop</code> es: <b>https://github.com/Legends600/pharma-frontend/pull/1</b>.</p>
+
+<div class="salto"></div>
+<h2>Anexo. Evidencias de los casos de prueba A7</h2>
+<p class="nota">Capturas tomadas en Chrome sobre la SPA (<code>localhost:4200</code>) y Practica (<code>localhost:8080</code>) en ejecución, con
+datos reales de Oracle. Debajo de cada captura figuran las peticiones HTTP a la API registradas durante ese caso (método, URL y código de respuesta).</p>
+<div class="evid">
+<figure><img src="evidencias/caso-01.png" alt="Caso 1">
+<figcaption><b>Caso 1. Entrar a «Clientes» desde el sidebar</b><br>Esperado: GET 200 con pagina=0; «Clientes» resaltado.<div class="red"><span class="ok">200</span> GET /api/v1/clientes?pagina=0&amp;tamanio=10&amp;ordenarPor=apellidos&amp;direccion=asc</div></figcaption></figure>
+<figure><img src="evidencias/caso-02.png" alt="Caso 2">
+<figcaption><b>Caso 2. Cambiar el tamaño a 5 y pulsar «Siguiente»</b><br>Esperado: tamanio=5&pagina=1; texto «Página 2 de …».<div class="red"><span class="ok">200</span> GET /api/v1/clientes?pagina=0&amp;tamanio=5&amp;ordenarPor=apellidos&amp;direccion=asc</div><div class="red"><span class="ok">200</span> GET /api/v1/clientes?pagina=1&amp;tamanio=5&amp;ordenarPor=apellidos&amp;direccion=asc</div></figcaption></figure>
+<figure><img src="evidencias/caso-03.png" alt="Caso 3">
+<figcaption><b>Caso 3. Ordenar por apellidos y volver a hacer clic</b><br>Esperado: direccion=asc y luego direccion=desc; el orden cambia.<div class="red"><span class="ok">200</span> GET /api/v1/clientes?pagina=0&amp;tamanio=5&amp;ordenarPor=dni&amp;direccion=asc</div><div class="red"><span class="ok">200</span> GET /api/v1/clientes?pagina=0&amp;tamanio=5&amp;ordenarPor=apellidos&amp;direccion=asc</div><div class="red"><span class="ok">200</span> GET /api/v1/clientes?pagina=0&amp;tamanio=5&amp;ordenarPor=apellidos&amp;direccion=desc</div></figcaption></figure>
+<figure><img src="evidencias/caso-04.png" alt="Caso 4">
+<figcaption><b>Caso 4. Registrar un cliente con DNI de 7 dígitos</b><br>Esperado: Mensaje de validación; no se envía la petición.<div class="red">Sin peticiones a la API durante este caso.</div></figcaption></figure>
+<figure><img src="evidencias/caso-05.png" alt="Caso 5">
+<figcaption><b>Caso 5. Registrar un cliente válido sin teléfono ni dirección</b><br>Esperado: POST 201; teléfono «—» en la tabla.<div class="red"><span class="ok">201</span> POST /api/v1/clientes</div><div class="red"><span class="ok">200</span> GET /api/v1/clientes?pagina=0&amp;tamanio=10&amp;ordenarPor=apellidos&amp;direccion=asc</div></figcaption></figure>
+<figure><img src="evidencias/caso-06.png" alt="Caso 6">
+<figcaption><b>Caso 6. Registrar otro cliente con el mismo DNI</b><br>Esperado: POST 409 con el mensaje del backend.<br>Alerta mostrada: «Ya existe un cliente con el DNI: 72345678»<div class="red"><span class="ko">409</span> POST /api/v1/clientes</div></figcaption></figure>
+<figure><img src="evidencias/caso-07.png" alt="Caso 7">
+<figcaption><b>Caso 7. Editar el teléfono con 9 dígitos</b><br>Esperado: Formulario precargado; PUT 200 y fila actualizada.<div class="red"><span class="ok">200</span> GET /api/v1/clientes?pagina=0&amp;tamanio=10&amp;ordenarPor=apellidos&amp;direccion=asc</div><div class="red"><span class="ok">200</span> GET /api/v1/clientes/32</div><div class="red"><span class="ok">200</span> PUT /api/v1/clientes/32</div><div class="red"><span class="ok">200</span> GET /api/v1/clientes?pagina=0&amp;tamanio=10&amp;ordenarPor=apellidos&amp;direccion=asc</div></figcaption></figure>
+<figure><img src="evidencias/caso-08a.png" alt="Caso 8a">
+<figcaption><b>Caso 8a. Buscar por parte del DNI (7100000)</b><br>Esperado: Se filtra la página actual sin peticiones nuevas.<div class="red">Sin peticiones a la API durante este caso.</div></figcaption></figure>
+<figure><img src="evidencias/caso-08b.png" alt="Caso 8b">
+<figcaption><b>Caso 8b. Buscar por apellido (rojas)</b><br>Esperado: Se filtra la página actual sin peticiones nuevas.<div class="red">Sin peticiones a la API durante este caso.</div></figcaption></figure>
+<figure><img src="evidencias/caso-09.png" alt="Caso 9">
+<figcaption><b>Caso 9. Dar de baja un cliente activo</b><br>Esperado: DELETE 204; tras recargar, la fila muestra «Inactivo».<div class="red"><span class="ok">204</span> DELETE /api/v1/clientes/32</div><div class="red"><span class="ok">200</span> GET /api/v1/clientes?pagina=0&amp;tamanio=10&amp;ordenarPor=apellidos&amp;direccion=asc</div></figcaption></figure>
+<figure><img src="evidencias/caso-10.png" alt="Caso 10">
+<figcaption><b>Caso 10. Dar de baja otra vez el mismo cliente</b><br>Esperado: DELETE 409 con el mensaje del backend.<br>Alerta mostrada: «El cliente con id 32 ya se encuentra inactivo»<div class="red"><span class="ko">409</span> DELETE /api/v1/clientes/32</div></figcaption></figure>
+<figure><img src="evidencias/caso-11.png" alt="Caso 11">
+<figcaption><b>Caso 11. Volver a «Categorías»</b><br>Esperado: Categorías sigue funcionando (GET 200).<div class="red"><span class="ok">200</span> GET /api/v1/categorias</div></figcaption></figure>
+</div>
+
+</body>
+</html>
