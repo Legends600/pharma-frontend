@@ -4,6 +4,26 @@
     <a routerLink="nuevo" class="btn btn-primary">+ Nuevo producto</a>
   </header>
 
+  <div class="filtros">
+    <label>
+      Categoría
+      <select class="input" (change)="filtrarPorCategoria($any($event.target).value)">
+        <option value="">Todas</option>
+        @for (c of categorias(); track c.id) {
+          <option [value]="c.id">{{ c.nombre }}{{ c.estado ? '' : ' (inactiva)' }}</option>
+        }
+      </select>
+    </label>
+    <label>
+      Por página
+      <select class="input" [value]="tamanio()" (change)="cambiarTamanio($any($event.target).value)">
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="20">20</option>
+      </select>
+    </label>
+  </div>
+
   @if (error()) {
     <div class="alerta">{{ error() }}</div>
   }
@@ -14,16 +34,16 @@
     <table class="tabla">
       <thead>
         <tr>
-          <th>Nombre</th>
+          <th><button type="button" class="orden" (click)="ordenar('nombre')">Nombre {{ indicadorOrden('nombre') }}</button></th>
           <th>Categoría</th>
-          <th>Precio</th>
-          <th>Stock</th>
+          <th><button type="button" class="orden" (click)="ordenar('precio')">Precio {{ indicadorOrden('precio') }}</button></th>
+          <th><button type="button" class="orden" (click)="ordenar('stock')">Stock {{ indicadorOrden('stock') }}</button></th>
           <th>Estado</th>
           <th>Acciones</th>
         </tr>
       </thead>
       <tbody>
-        @for (p of resultado()?.contenido ?? []; track p.id) {
+        @for (p of productos(); track p.id) {
           <tr>
             <td>{{ p.nombre }}</td>
             <td><span class="chip">{{ p.categoriaNombre }}</span></td>
