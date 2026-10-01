@@ -1,0 +1,199 @@
+{
+  "info": {
+    "name": "PharmaSoft - S8 Dependencias",
+    "description": "Pruebas por API de las dependencias entre Categorías y Productos (Sesión 8, actividad autónoma). Cada petición lleva el ID del caso de la matriz y un test con el código HTTP que exige la regla de negocio.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080/api/v1" },
+    { "key": "categoriaInactivaId", "value": "84" },
+    { "key": "categoriaActivaId", "value": "64" },
+    { "key": "productoId", "value": "" },
+    { "key": "productoNombre", "value": "" },
+    { "key": "nombreExistente", "value": "Paracetamol 500mg" },
+    { "key": "categoriaConProductosId", "value": "" },
+    { "key": "categoriaConProductosNombre", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Preparación",
+      "item": [
+        {
+          "name": "GET categorías (buscar la inactiva)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('200 OK', () => pm.response.to.have.status(200));",
+            "const inactiva = pm.response.json().find(c => c.estado === false);",
+            "if (inactiva) { pm.collectionVariables.set('categoriaInactivaId', inactiva.id); }"
+          ] } }],
+          "request": { "method": "GET", "url": "{{baseUrl}}/categorias" }
+        }
+      ]
+    },
+    {
+      "name": "Altas",
+      "item": [
+        {
+          "name": "A-02 Registrar producto sin categoriaId",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('400 Bad Request', () => pm.response.to.have.status(400));",
+            "pm.test('validationErrors incluye categoriaId', () => pm.expect(pm.response.json().validationErrors).to.have.property('categoriaId'));"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Producto de prueba A-02\",\n  \"precio\": 5.50,\n  \"stock\": 10,\n  \"estado\": true\n}" },
+            "url": "{{baseUrl}}/productos"
+          }
+        },
+        {
+          "name": "A-03 Registrar producto con categoriaId 999",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('404 Not Found', () => pm.response.to.have.status(404));",
+            "pm.test('Mensaje de categoría no encontrada', () => pm.expect(pm.response.json().message).to.include('Categoria no encontrada'));"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Producto de prueba A-03\",\n  \"precio\": 5.50,\n  \"stock\": 10,\n  \"estado\": true,\n  \"categoriaId\": 999\n}" },
+            "url": "{{baseUrl}}/productos"
+          }
+        },
+        {
+          "name": "A-04 Registrar producto en categoría inactiva",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('409 Conflict (la categoría está inactiva)', () => pm.response.to.have.status(409));"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Producto de prueba A-04\",\n  \"precio\": 5.50,\n  \"stock\": 10,\n  \"estado\": true,\n  \"categoriaId\": {{categoriaInactivaId}}\n}" },
+            "url": "{{baseUrl}}/productos"
+          }
+        },
+        {
+          "name": "A-06 Registrar producto con precio 0 y stock -1",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('400 Bad Request', () => pm.response.to.have.status(400));",
+            "pm.test('validationErrors con precio y stock', () => {",
+            "  const errores = pm.response.json().validationErrors;",
+            "  pm.expect(errores).to.have.property('precio');",
+            "  pm.expect(errores).to.have.property('stock');",
+            "});"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Producto de prueba A-06\",\n  \"precio\": 0,\n  \"stock\": -1,\n  \"estado\": true,\n  \"categoriaId\": {{categoriaActivaId}}\n}" },
+            "url": "{{baseUrl}}/productos"
+          }
+        },
+        {
+          "name": "A-07 Registrar producto con stock decimal (2.5)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('400 Bad Request (el stock debe ser entero)', () => pm.response.to.have.status(400));"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Producto de prueba A-07\",\n  \"precio\": 3.20,\n  \"stock\": 2.5,\n  \"estado\": true,\n  \"categoriaId\": {{categoriaActivaId}}\n}" },
+            "url": "{{baseUrl}}/productos"
+          }
+        },
+        {
+          "name": "A-08 Registrar producto con nombre solo de espacios",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('400 Bad Request', () => pm.response.to.have.status(400));",
+            "pm.test('validationErrors incluye nombre', () => pm.expect(pm.response.json().validationErrors).to.have.property('nombre'));"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"     \",\n  \"precio\": 3.20,\n  \"stock\": 2,\n  \"estado\": true,\n  \"categoriaId\": {{categoriaActivaId}}\n}" },
+            "url": "{{baseUrl}}/productos"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cambios",
+      "item": [
+        {
+          "name": "C-02 Cambiar la categoría de un producto a una inactiva",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('409 Conflict (la categoría está inactiva)', () => pm.response.to.have.status(409));"
+          ] } }],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"{{productoNombre}}\",\n  \"precio\": 9.90,\n  \"stock\": 25,\n  \"estado\": true,\n  \"categoriaId\": {{categoriaInactivaId}}\n}" },
+            "url": "{{baseUrl}}/productos/{{productoId}}"
+          }
+        },
+        {
+          "name": "C-03 Desactivar una categoría que tiene productos activos",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('409 Conflict (la categoría tiene productos activos)', () => pm.response.to.have.status(409));"
+          ] } }],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"{{categoriaConProductosNombre}}\",\n  \"descripcion\": \"Categoría con productos activos\",\n  \"estado\": false\n}" },
+            "url": "{{baseUrl}}/categorias/{{categoriaConProductosId}}"
+          }
+        },
+        {
+          "name": "C-05 Actualizar un producto inexistente",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('404 Not Found', () => pm.response.to.have.status(404));"
+          ] } }],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Producto inexistente C-05\",\n  \"precio\": 1.00,\n  \"stock\": 1,\n  \"estado\": true,\n  \"categoriaId\": {{categoriaActivaId}}\n}" },
+            "url": "{{baseUrl}}/productos/99999"
+          }
+        },
+        {
+          "name": "C-06 Renombrar un producto con el nombre de otro",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('409 Conflict', () => pm.response.to.have.status(409));",
+            "pm.test('Mensaje de nombre repetido', () => pm.expect(pm.response.json().message).to.include('Ya existe un producto'));"
+          ] } }],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"{{nombreExistente}}\",\n  \"precio\": 9.90,\n  \"stock\": 25,\n  \"estado\": true,\n  \"categoriaId\": {{categoriaActivaId}}\n}" },
+            "url": "{{baseUrl}}/productos/{{productoId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bajas",
+      "item": [
+        {
+          "name": "B-02 Dar de baja otra vez el mismo producto",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('409 Conflict', () => pm.response.to.have.status(409));",
+            "pm.test('Mensaje: ya se encuentra inactivo', () => pm.expect(pm.response.json().message).to.include('ya se encuentra inactivo'));"
+          ] } }],
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/productos/{{productoId}}" }
+        },
+        {
+          "name": "B-05 Dar de baja un producto inexistente",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('404 Not Found', () => pm.response.to.have.status(404));"
+          ] } }],
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/productos/99999" }
+        },
+        {
+          "name": "B-06 Eliminar una categoría inexistente",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('404 Not Found', () => pm.response.to.have.status(404));"
+          ] } }],
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/categorias/99999" }
+        }
+      ]
+    }
+  ]
+}
