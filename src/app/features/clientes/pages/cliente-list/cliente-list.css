@@ -1,0 +1,8 @@
+.herramientas { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 16px; }
+.buscador { max-width: 320px; }
+.tamanio { display: flex; align-items: center; gap: 8px; font-size: 14px; white-space: nowrap; }
+.tamanio .input { width: auto; }
+.orden { background: none; border: 0; padding: 0; color: inherit; font: inherit; font-weight: 700; cursor: pointer; }
+.acciones { display: flex; gap: 8px; }
+.vacio { text-align: center; color: #6b7280; padding: 24px; }
+.paginacion { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-top: 16px; font-size: 14px; }
