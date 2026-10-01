@@ -10,7 +10,7 @@
       <select class="input" (change)="filtrarPorCategoria($any($event.target).value)">
         <option value="">Todas</option>
         @for (c of categorias(); track c.id) {
-          <option [value]="c.id">{{ c.nombre }}{{ c.estado ? '' : ' (inactiva)' }}</option>
+          <option [value]="c.id" [selected]="c.id === categoriaFiltro()">{{ c.nombre }}{{ c.estado ? '' : ' (inactiva)' }}</option>
         }
       </select>
     </label>
@@ -20,9 +20,14 @@
         <option value="5">5</option>
         <option value="10">10</option>
         <option value="20">20</option>
+        <option value="100">100</option>
       </select>
     </label>
   </div>
+
+  @if (notaFiltro(); as nota) {
+    <p class="nota">{{ nota }}</p>
+  }
 
   @if (error()) {
     <div class="alerta">{{ error() }}</div>

@@ -1,0 +1,576 @@
+{
+  "inactiva": {
+    "id": 84,
+    "nombre": "Analgésicos descontinuados",
+    "descripcion": "Línea retirada del catálogo",
+    "estado": false,
+    "fechaCreacion": "2026-10-01T10:51:35.1019268",
+    "fechaModificacion": "2026-10-01T10:51:35.8220829"
+  },
+  "omeprazolId": 53,
+  "resultados": [
+    {
+      "id": "A-01",
+      "medio": "SPA",
+      "titulo": "Registrar producto válido en una categoría activa",
+      "red": [
+        {
+          "metodo": "GET",
+          "url": "/api/v1/categorias",
+          "estado": 200
+        },
+        {
+          "metodo": "POST",
+          "url": "/api/v1/productos",
+          "estado": 201
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/categorias",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/productos?pagina=0&tamanio=10&ordenarPor=nombre&direccion=asc",
+          "estado": 200
+        }
+      ],
+      "alerta": null,
+      "nota": null,
+      "evidencia": "A-01_spa.png"
+    },
+    {
+      "id": "A-02",
+      "medio": "SPA",
+      "titulo": "Registrar producto sin elegir categoría",
+      "red": [],
+      "alerta": null,
+      "nota": null,
+      "evidencia": "A-02_spa.png"
+    },
+    {
+      "id": "A-02",
+      "medio": "Postman",
+      "nombre": "A-02 Registrar producto sin categoriaId",
+      "metodo": "POST",
+      "url": "http://localhost:8080/api/v1/productos",
+      "cuerpo": "{\n  \"nombre\": \"Producto de prueba A-02\",\n  \"precio\": 5.50,\n  \"stock\": 10,\n  \"estado\": true\n}",
+      "estado": 400,
+      "respuesta": "{\"timestamp\":\"2026-10-01T11:30:02.3452836\",\"status\":400,\"error\":\"Bad Request\",\"message\":\"Existen errores de validación\",\"path\":\"/api/v1/productos\",\"validationErrors\":{\"categoriaId\":\"La categoría es obligatoria\"}}",
+      "tests": [
+        {
+          "nombre": "400 Bad Request",
+          "ok": true
+        },
+        {
+          "nombre": "validationErrors incluye categoriaId",
+          "ok": true
+        }
+      ],
+      "evidencia": "A-02_postman.png"
+    },
+    {
+      "id": "A-03",
+      "medio": "Postman",
+      "nombre": "A-03 Registrar producto con categoriaId 999",
+      "metodo": "POST",
+      "url": "http://localhost:8080/api/v1/productos",
+      "cuerpo": "{\n  \"nombre\": \"Producto de prueba A-03\",\n  \"precio\": 5.50,\n  \"stock\": 10,\n  \"estado\": true,\n  \"categoriaId\": 999\n}",
+      "estado": 404,
+      "respuesta": "{\"timestamp\":\"2026-10-01T11:30:02.6180897\",\"status\":404,\"error\":\"Not Found\",\"message\":\"Categoria no encontrada con id: 999\",\"path\":\"/api/v1/productos\",\"validationErrors\":null}",
+      "tests": [
+        {
+          "nombre": "404 Not Found",
+          "ok": true
+        },
+        {
+          "nombre": "Mensaje de categoría no encontrada",
+          "ok": true
+        }
+      ],
+      "evidencia": "A-03_postman.png"
+    },
+    {
+      "id": "A-04",
+      "medio": "SPA",
+      "titulo": "Registrar producto en una categoría inactiva",
+      "red": [
+        {
+          "metodo": "GET",
+          "url": "/api/v1/categorias",
+          "estado": 200
+        }
+      ],
+      "alerta": null,
+      "nota": "Opciones del select: Seleccione una categoría… | Temporal S8 | Gastrointestinales | Vitaminas | Liquidación | Higiene | Electronica | Ropa | Hogar | Medicamentos — «Analgésicos descontinuados» no aparece",
+      "evidencia": "A-04_spa.png"
+    },
+    {
+      "id": "A-04",
+      "medio": "Postman",
+      "nombre": "A-04 Registrar producto en categoría inactiva",
+      "metodo": "POST",
+      "url": "http://localhost:8080/api/v1/productos",
+      "cuerpo": "{\n  \"nombre\": \"Producto de prueba A-04\",\n  \"precio\": 5.50,\n  \"stock\": 10,\n  \"estado\": true,\n  \"categoriaId\": 84\n}",
+      "estado": 409,
+      "respuesta": "{\"timestamp\":\"2026-10-01T11:30:03.6249602\",\"status\":409,\"error\":\"Conflict\",\"message\":\"La categoría \\\"Analgésicos descontinuados\\\" está inactiva; elija una categoría activa\",\"path\":\"/api/v1/productos\",\"validationErrors\":null}",
+      "tests": [
+        {
+          "nombre": "409 Conflict (la categoría está inactiva)",
+          "ok": true
+        }
+      ],
+      "evidencia": "A-04_postman.png"
+    },
+    {
+      "id": "A-05",
+      "medio": "SPA",
+      "titulo": "Registrar producto con un nombre existente en otra capitalización",
+      "red": [
+        {
+          "metodo": "GET",
+          "url": "/api/v1/categorias",
+          "estado": 200
+        },
+        {
+          "metodo": "POST",
+          "url": "/api/v1/productos",
+          "estado": 409
+        }
+      ],
+      "alerta": "Ya existe un producto con el nombre: OMEPRAZOL 20MG",
+      "nota": null,
+      "evidencia": "A-05_spa.png"
+    },
+    {
+      "id": "A-06",
+      "medio": "SPA",
+      "titulo": "Registrar producto con precio 0 y stock −1",
+      "red": [],
+      "alerta": null,
+      "nota": null,
+      "evidencia": "A-06_spa.png"
+    },
+    {
+      "id": "A-06",
+      "medio": "Postman",
+      "nombre": "A-06 Registrar producto con precio 0 y stock -1",
+      "metodo": "POST",
+      "url": "http://localhost:8080/api/v1/productos",
+      "cuerpo": "{\n  \"nombre\": \"Producto de prueba A-06\",\n  \"precio\": 0,\n  \"stock\": -1,\n  \"estado\": true,\n  \"categoriaId\": 64\n}",
+      "estado": 400,
+      "respuesta": "{\"timestamp\":\"2026-10-01T11:30:05.4924\",\"status\":400,\"error\":\"Bad Request\",\"message\":\"Existen errores de validación\",\"path\":\"/api/v1/productos\",\"validationErrors\":{\"stock\":\"El stock no puede ser negativo\",\"precio\":\"El precio debe ser mayor o igual a 0.01\"}}",
+      "tests": [
+        {
+          "nombre": "400 Bad Request",
+          "ok": true
+        },
+        {
+          "nombre": "validationErrors con precio y stock",
+          "ok": true
+        }
+      ],
+      "evidencia": "A-06_postman.png"
+    },
+    {
+      "id": "A-07",
+      "medio": "Postman",
+      "nombre": "A-07 Registrar producto con stock decimal (2.5)",
+      "metodo": "POST",
+      "url": "http://localhost:8080/api/v1/productos",
+      "cuerpo": "{\n  \"nombre\": \"Producto de prueba A-07\",\n  \"precio\": 3.20,\n  \"stock\": 2.5,\n  \"estado\": true,\n  \"categoriaId\": 64\n}",
+      "estado": 201,
+      "respuesta": "{\"id\":54,\"nombre\":\"Producto de prueba A-07\",\"precio\":3.2,\"stock\":2,\"estado\":true,\"categoriaId\":64,\"categoriaNombre\":\"Medicamentos\",\"fechaCreacion\":\"2026-10-01T11:30:05.7445976\",\"fechaModificacion\":null}",
+      "tests": [
+        {
+          "nombre": "400 Bad Request (el stock debe ser entero)",
+          "ok": false
+        }
+      ],
+      "evidencia": "A-07_postman.png"
+    },
+    {
+      "id": "A-08",
+      "medio": "Postman",
+      "nombre": "A-08 Registrar producto con nombre solo de espacios",
+      "metodo": "POST",
+      "url": "http://localhost:8080/api/v1/productos",
+      "cuerpo": "{\n  \"nombre\": \"     \",\n  \"precio\": 3.20,\n  \"stock\": 2,\n  \"estado\": true,\n  \"categoriaId\": 64\n}",
+      "estado": 400,
+      "respuesta": "{\"timestamp\":\"2026-10-01T11:30:06.0343272\",\"status\":400,\"error\":\"Bad Request\",\"message\":\"Existen errores de validación\",\"path\":\"/api/v1/productos\",\"validationErrors\":{\"nombre\":\"El nombre no puede estar vacío\"}}",
+      "tests": [
+        {
+          "nombre": "400 Bad Request",
+          "ok": true
+        },
+        {
+          "nombre": "validationErrors incluye nombre",
+          "ok": true
+        }
+      ],
+      "evidencia": "A-08_postman.png"
+    },
+    {
+      "id": "C-01",
+      "medio": "SPA",
+      "titulo": "Cambiar la categoría de un producto a otra activa",
+      "red": [
+        {
+          "metodo": "GET",
+          "url": "/api/v1/categorias",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/productos?pagina=0&tamanio=10&ordenarPor=nombre&direccion=asc",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/productos?pagina=0&tamanio=100&ordenarPor=nombre&direccion=asc",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/productos/53",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/categorias",
+          "estado": 200
+        },
+        {
+          "metodo": "PUT",
+          "url": "/api/v1/productos/53",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/categorias",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/productos?pagina=0&tamanio=10&ordenarPor=nombre&direccion=asc",
+          "estado": 200
+        }
+      ],
+      "alerta": null,
+      "nota": null,
+      "evidencia": "C-01_spa.png"
+    },
+    {
+      "id": "C-02",
+      "medio": "SPA",
+      "titulo": "Cambiar la categoría de un producto a una inactiva",
+      "red": [
+        {
+          "metodo": "GET",
+          "url": "/api/v1/categorias",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/productos?pagina=0&tamanio=10&ordenarPor=nombre&direccion=asc",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/productos?pagina=0&tamanio=100&ordenarPor=nombre&direccion=asc",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/productos/53",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/categorias",
+          "estado": 200
+        }
+      ],
+      "alerta": null,
+      "nota": "Opciones del select: Seleccione una categoría… | Temporal S8 | Gastrointestinales | Vitaminas | Liquidación | Higiene | Electronica | Ropa | Hogar | Medicamentos — «Analgésicos descontinuados» no se ofrece",
+      "evidencia": "C-02_spa.png"
+    },
+    {
+      "id": "C-02",
+      "medio": "Postman",
+      "nombre": "C-02 Cambiar la categoría de un producto a una inactiva",
+      "metodo": "PUT",
+      "url": "http://localhost:8080/api/v1/productos/53",
+      "cuerpo": "{\n  \"nombre\": \"Omeprazol 20mg\",\n  \"precio\": 9.90,\n  \"stock\": 25,\n  \"estado\": true,\n  \"categoriaId\": 84\n}",
+      "estado": 409,
+      "respuesta": "{\"timestamp\":\"2026-10-01T11:30:08.0792844\",\"status\":409,\"error\":\"Conflict\",\"message\":\"La categoría \\\"Analgésicos descontinuados\\\" está inactiva; elija una categoría activa\",\"path\":\"/api/v1/productos/53\",\"validationErrors\":null}",
+      "tests": [
+        {
+          "nombre": "409 Conflict (la categoría está inactiva)",
+          "ok": true
+        }
+      ],
+      "evidencia": "C-02_postman.png"
+    },
+    {
+      "id": "C-03",
+      "medio": "SPA",
+      "titulo": "Desactivar una categoría que tiene productos activos",
+      "red": [
+        {
+          "metodo": "GET",
+          "url": "/api/v1/categorias/86",
+          "estado": 200
+        },
+        {
+          "metodo": "PUT",
+          "url": "/api/v1/categorias/86",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/categorias",
+          "estado": 200
+        }
+      ],
+      "alerta": null,
+      "nota": "PUT 200 · Después: «Vitamina C 1g» estado=activo en categoría «Vitaminas» (inactiva)",
+      "evidencia": "C-03_spa.png"
+    },
+    {
+      "id": "C-04",
+      "medio": "SPA",
+      "titulo": "Dos pestañas: registrar en una categoría desactivada en otra pestaña",
+      "red": [
+        {
+          "metodo": "GET",
+          "url": "/api/v1/categorias",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/categorias/89",
+          "estado": 200
+        },
+        {
+          "metodo": "PUT",
+          "url": "/api/v1/categorias/89",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/categorias",
+          "estado": 200
+        },
+        {
+          "metodo": "POST",
+          "url": "/api/v1/productos",
+          "estado": 409
+        }
+      ],
+      "alerta": "La categoría \"Higiene\" está inactiva; elija una categoría activa",
+      "nota": "Pestaña 2 desactivó «Higiene» (PUT) y luego la pestaña 1 pulsó «Registrar»",
+      "evidencia": "C-04_spa.png"
+    },
+    {
+      "id": "C-05",
+      "medio": "Postman",
+      "nombre": "C-05 Actualizar un producto inexistente",
+      "metodo": "PUT",
+      "url": "http://localhost:8080/api/v1/productos/99999",
+      "cuerpo": "{\n  \"nombre\": \"Producto inexistente C-05\",\n  \"precio\": 1.00,\n  \"stock\": 1,\n  \"estado\": true,\n  \"categoriaId\": 64\n}",
+      "estado": 404,
+      "respuesta": "{\"timestamp\":\"2026-10-01T11:30:13.180311\",\"status\":404,\"error\":\"Not Found\",\"message\":\"Producto no encontrado con id: 99999\",\"path\":\"/api/v1/productos/99999\",\"validationErrors\":null}",
+      "tests": [
+        {
+          "nombre": "404 Not Found",
+          "ok": true
+        }
+      ],
+      "evidencia": "C-05_postman.png"
+    },
+    {
+      "id": "C-06",
+      "medio": "Postman",
+      "nombre": "C-06 Renombrar un producto con el nombre de otro",
+      "metodo": "PUT",
+      "url": "http://localhost:8080/api/v1/productos/53",
+      "cuerpo": "{\n  \"nombre\": \"Paracetamol 500mg\",\n  \"precio\": 9.90,\n  \"stock\": 25,\n  \"estado\": true,\n  \"categoriaId\": 64\n}",
+      "estado": 409,
+      "respuesta": "{\"timestamp\":\"2026-10-01T11:30:13.4593077\",\"status\":409,\"error\":\"Conflict\",\"message\":\"Ya existe un producto con el nombre: Paracetamol 500mg\",\"path\":\"/api/v1/productos/53\",\"validationErrors\":null}",
+      "tests": [
+        {
+          "nombre": "409 Conflict",
+          "ok": true
+        },
+        {
+          "nombre": "Mensaje de nombre repetido",
+          "ok": true
+        }
+      ],
+      "evidencia": "C-06_postman.png"
+    },
+    {
+      "id": "B-01",
+      "medio": "SPA",
+      "titulo": "Dar de baja un producto activo",
+      "red": [
+        {
+          "metodo": "GET",
+          "url": "/api/v1/productos?pagina=0&tamanio=100&ordenarPor=nombre&direccion=asc",
+          "estado": 200
+        },
+        {
+          "metodo": "DELETE",
+          "url": "/api/v1/productos/53",
+          "estado": 204
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/productos?pagina=0&tamanio=100&ordenarPor=nombre&direccion=asc",
+          "estado": 200
+        }
+      ],
+      "alerta": null,
+      "nota": null,
+      "evidencia": "B-01_spa.png"
+    },
+    {
+      "id": "B-02",
+      "medio": "Postman",
+      "nombre": "B-02 Dar de baja otra vez el mismo producto",
+      "metodo": "DELETE",
+      "url": "http://localhost:8080/api/v1/productos/53",
+      "cuerpo": null,
+      "estado": 409,
+      "respuesta": "{\"timestamp\":\"2026-10-01T11:30:14.6622539\",\"status\":409,\"error\":\"Conflict\",\"message\":\"El producto \\\"Omeprazol 20mg\\\" ya se encuentra inactivo\",\"path\":\"/api/v1/productos/53\",\"validationErrors\":null}",
+      "tests": [
+        {
+          "nombre": "409 Conflict",
+          "ok": true
+        },
+        {
+          "nombre": "Mensaje: ya se encuentra inactivo",
+          "ok": true
+        }
+      ],
+      "evidencia": "B-02_postman.png"
+    },
+    {
+      "id": "B-03",
+      "medio": "SPA",
+      "titulo": "Eliminar una categoría sin productos",
+      "red": [
+        {
+          "metodo": "DELETE",
+          "url": "/api/v1/categorias/87",
+          "estado": 204
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/categorias",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/categorias",
+          "estado": 200
+        }
+      ],
+      "alerta": null,
+      "nota": "Fila en Categorías: no · En el select de Productos: no",
+      "evidencia": "B-03_spa.png"
+    },
+    {
+      "id": "B-04",
+      "medio": "SPA",
+      "titulo": "Eliminar una categoría cuyos productos están todos dados de baja",
+      "red": [
+        {
+          "metodo": "DELETE",
+          "url": "/api/v1/categorias/88",
+          "estado": 409
+        }
+      ],
+      "alerta": "No se puede eliminar la categoria \"Liquidación\" porque tiene productos asociados",
+      "nota": "Único producto de «Liquidación»: «Termómetro digital», dado de baja",
+      "evidencia": "B-04_spa.png"
+    },
+    {
+      "id": "B-05",
+      "medio": "Postman",
+      "nombre": "B-05 Dar de baja un producto inexistente",
+      "metodo": "DELETE",
+      "url": "http://localhost:8080/api/v1/productos/99999",
+      "cuerpo": null,
+      "estado": 404,
+      "respuesta": "{\"timestamp\":\"2026-10-01T11:30:17.2238782\",\"status\":404,\"error\":\"Not Found\",\"message\":\"Producto no encontrado con id: 99999\",\"path\":\"/api/v1/productos/99999\",\"validationErrors\":null}",
+      "tests": [
+        {
+          "nombre": "404 Not Found",
+          "ok": true
+        }
+      ],
+      "evidencia": "B-05_postman.png"
+    },
+    {
+      "id": "B-06",
+      "medio": "Postman",
+      "nombre": "B-06 Eliminar una categoría inexistente",
+      "metodo": "DELETE",
+      "url": "http://localhost:8080/api/v1/categorias/99999",
+      "cuerpo": null,
+      "estado": 404,
+      "respuesta": "{\"timestamp\":\"2026-10-01T11:30:17.4475869\",\"status\":404,\"error\":\"Not Found\",\"message\":\"Categoria no encontrada con id: 99999\",\"path\":\"/api/v1/categorias/99999\",\"validationErrors\":null}",
+      "tests": [
+        {
+          "nombre": "404 Not Found",
+          "ok": true
+        }
+      ],
+      "evidencia": "B-06_postman.png"
+    },
+    {
+      "id": "VP-01",
+      "medio": "SPA",
+      "titulo": "«Ver productos» desde Categorías",
+      "red": [
+        {
+          "metodo": "GET",
+          "url": "/api/v1/categorias",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/categorias",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/productos?pagina=0&tamanio=100&ordenarPor=nombre&direccion=asc",
+          "estado": 200
+        }
+      ],
+      "alerta": null,
+      "nota": null,
+      "evidencia": "VP-01_spa.png"
+    },
+    {
+      "id": "C-03",
+      "medio": "Postman",
+      "nombre": "C-03 Desactivar una categoría que tiene productos activos",
+      "metodo": "PUT",
+      "url": "http://localhost:8080/api/v1/categorias/90",
+      "cuerpo": "{\n  \"nombre\": \"Dermocosméticos\",\n  \"descripcion\": \"Categoría con productos activos\",\n  \"estado\": false\n}",
+      "estado": 200,
+      "respuesta": "{\"id\":90,\"nombre\":\"Dermocosméticos\",\"descripcion\":\"Categoría con productos activos\",\"estado\":false,\"fechaCreacion\":\"2026-10-01T11:31:19.4166356\",\"fechaModificacion\":null}",
+      "tests": [
+        {
+          "nombre": "409 Conflict (la categoría tiene productos activos)",
+          "ok": false
+        }
+      ],
+      "evidencia": "C-03_postman.png"
+    }
+  ]
+}
