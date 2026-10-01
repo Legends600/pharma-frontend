@@ -7,6 +7,11 @@
 
   @if (cargando()) {
     <p>Cargando datos…</p>
+  } @else if (!hayCategoriasActivas()) {
+    <div class="aviso">
+      No hay categorías activas. Registre o active una categoría antes de crear productos.
+      <a routerLink="/categorias/nuevo" class="btn btn-primary">Nueva categoría</a>
+    </div>
   } @else {
     <form [formGroup]="form" (ngSubmit)="guardar()" class="card formulario">
       <label>
@@ -20,6 +25,9 @@
       </label>
       @if (form.controls.categoriaId.touched && form.controls.categoriaId.invalid) {
         <small class="error">Seleccione la categoría del producto.</small>
+      }
+      @if (categoriaInactiva()) {
+        <small class="error">La categoría elegida está inactiva. Elija una categoría activa.</small>
       }
       @if (erroresServidor()['categoriaId']; as mensaje) {
         <small class="error">{{ mensaje }}</small>

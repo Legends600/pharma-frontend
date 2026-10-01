@@ -94,4 +94,16 @@ export class ProductoList implements OnInit {
   filtrarPorCategoria(valor: string): void {
     this.categoriaFiltro.set(valor ? Number(valor) : null);
   }
+
+  darDeBaja(producto: Producto): void {
+    if (!confirm(`¿Dar de baja el producto "${producto.nombre}"?`)) {
+      return;
+    }
+    this.error.set(null);
+    this.productoService.darDeBaja(producto.id).subscribe({
+      // La baja es lógica: se recarga la página para ver la fila como «Inactivo».
+      next: () => this.cargar(),
+      error: (err: HttpErrorResponse) => this.error.set(mensajeError(err)),
+    });
+  }
 }

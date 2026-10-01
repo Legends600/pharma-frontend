@@ -1,4 +1,5 @@
 import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -45,6 +46,18 @@ export class ProductoForm implements OnInit {
     this.categorias().filter(c => c.estado || c.id === this.categoriaOriginal()),
   );
 
+  protected readonly hayCategoriasActivas = computed(() => this.categorias().some(c => c.estado));
+
+  /** Valor del select convertido en signal para validar la dependencia. */
+  private readonly categoriaElegida = toSignal(this.form.controls.categoriaId.valueChanges, {
+    initialValue: null,
+  });
+
+  protected readonly categoriaInactiva = computed(() => {
+    const elegida = this.categorias().find(c => c.id === this.categoriaElegida());
+    return !!elegida && !elegida.estado;
+  });
+
   protected esEdicion(): boolean {
     return !!this.id();
   }
@@ -83,7 +96,8 @@ export class ProductoForm implements OnInit {
   }
 
   guardar(): void {
-    if (this.form.invalid) {
+    // No se envía la petición mientras la categoría elegida esté inactiva.
+    if (this.form.invalid || this.categoriaInactiva()) {
       this.form.markAllAsTouched();
       return;
     }
