@@ -1,0 +1,65 @@
+<section class="page">
+  <h2>Nueva venta</h2>
+
+  @if (error()) {
+    <div class="alerta">{{ error() }}</div>
+  }
+
+  @if (cargando()) {
+    <p>Cargando clientes y productos…</p>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="guardar()" class="card">
+      <h3 class="subtitulo">1. Cliente</h3>
+      <select class="input campo" formControlName="clienteId">
+        <option [ngValue]="null" disabled>Seleccione un cliente…</option>
+        @for (c of clientes(); track c.id) {
+          <option [ngValue]="c.id">{{ c.apellidos }}, {{ c.nombres }} · DNI {{ c.dni }}</option>
+        }
+      </select>
+      @if (form.controls.clienteId.touched && form.controls.clienteId.invalid) {
+        <small class="error">Seleccione el cliente.</small>
+      }
+
+      <h3 class="subtitulo">2. Productos</h3>
+      <div class="agregar-linea">
+        <select class="input campo" [formControl]="productoElegido">
+          <option [ngValue]="null" disabled>Seleccione un producto…</option>
+          @for (p of productos(); track p.id) {
+            <option [ngValue]="p.id">{{ p.nombre }} · stock {{ p.stock }}</option>
+          }
+        </select>
+        <button type="button" class="btn" (click)="agregarLinea()">+ Agregar</button>
+      </div>
+
+      <table class="tabla detalle" formArrayName="detalles">
+        <thead>
+          <tr><th>Producto</th><th>Cantidad</th><th></th></tr>
+        </thead>
+        <tbody>
+          @for (linea of detalles.controls; track linea; let i = $index) {
+            <tr [formGroupName]="i">
+              <td>{{ nombreProducto(linea.controls.productoId.value) }}</td>
+              <td><input class="input cantidad" type="number" min="1" step="1" formControlName="cantidad" /></td>
+              <td>
+                <button type="button" class="btn btn-peligro" (click)="quitarLinea(i)" aria-label="Quitar producto">✕</button>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="3" class="vacio">Aún no hay productos.</td></tr>
+          }
+        </tbody>
+      </table>
+
+      @if (form.controls.detalles.touched && form.controls.detalles.invalid) {
+        <small class="error">Agregue al menos un producto y una cantidad entera mayor que cero en cada línea.</small>
+      }
+
+      <div class="acciones">
+        <a routerLink="/ventas" class="btn">Cancelar</a>
+        <button type="submit" class="btn btn-primary" [disabled]="guardando()">
+          {{ guardando() ? 'Registrando…' : 'Registrar venta' }}
+        </button>
+      </div>
+    </form>
+  }
+</section>

@@ -1,0 +1,10 @@
+.subtitulo { margin: 8px 0 8px; font-size: 16px; color: #0f2e5c; }
+.subtitulo:not(:first-child) { margin-top: 20px; }
+.campo { max-width: 640px; }
+.agregar-linea { display: flex; gap: 8px; max-width: 640px; }
+.detalle { margin-top: 16px; }
+.detalle td { vertical-align: top; }
+.detalle .vacio { text-align: center; padding: 16px; color: #6b7280; }
+.cantidad { width: 90px; }
+.error { display: block; color: #b42318; margin-top: 4px; }
+.acciones { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
