@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
 import { CurrencyPipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
@@ -19,6 +19,12 @@ export class ProductoList implements OnInit {
   private readonly productoService = inject(ProductoService);
   private readonly categoriaService = inject(CategoriaService);
 
+  /** Query param ?categoriaId=… (llega desde «Ver productos» gracias a withComponentInputBinding()). */
+  readonly categoriaId = input<string>();
+
+  /** Máximo que acepta el backend; se usa cuando se llega filtrado desde Categorías. */
+  private static readonly TAMANIO_MAXIMO = 100;
+
   // Estado de la consulta paginada
   protected readonly pagina = signal(0);
   protected readonly tamanio = signal(10);
@@ -38,7 +44,23 @@ export class ProductoList implements OnInit {
     return filtro === null ? lista : lista.filter(p => p.categoriaId === filtro);
   });
 
+  /** Nota visible mientras se mantiene el filtro que llegó desde «Ver productos». */
+  protected readonly notaFiltro = computed(() => {
+    const desdeCategoria = Number(this.categoriaId());
+    if (!desdeCategoria || this.categoriaFiltro() !== desdeCategoria) {
+      return null;
+    }
+    const nombre = this.categorias().find(c => c.id === desdeCategoria)?.nombre ?? `#${desdeCategoria}`;
+    return `Mostrando productos de la categoría ${nombre} en los primeros ${this.tamanio()} registros`;
+  });
+
   ngOnInit(): void {
+    const categoriaId = Number(this.categoriaId());
+    if (categoriaId) {
+      // El filtro trabaja sobre la página actual: se pide la página más grande posible.
+      this.categoriaFiltro.set(categoriaId);
+      this.tamanio.set(ProductoList.TAMANIO_MAXIMO);
+    }
     this.categoriaService.listar().subscribe({
       next: datos => this.categorias.set(datos),
       error: (err: HttpErrorResponse) => this.error.set(mensajeError(err)),
