@@ -1,0 +1,134 @@
+{
+  "info": {
+    "name": "PharmaSoft - S9 Ventas",
+    "description": "Pruebas por API del registro de ventas (Sesión 9, actividad autónoma). Cada petición lleva el ID del caso de la matriz y un test con el resultado que exige la regla de negocio.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080/api/v1" },
+    { "key": "clienteActivoId", "value": "" },
+    { "key": "clienteInactivoId", "value": "" },
+    { "key": "productoStock2Id", "value": "" },
+    { "key": "productoId", "value": "" },
+    { "key": "productoDecimalId", "value": "" },
+    { "key": "ventaId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Validaciones",
+      "item": [
+        {
+          "name": "V-01 Registrar venta sin cliente ni detalles",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('400 Bad Request', () => pm.response.to.have.status(400));",
+            "pm.test('validationErrors con clienteId y detalles', () => {",
+            "  const e = pm.response.json().validationErrors;",
+            "  pm.expect(e).to.have.property('clienteId');",
+            "  pm.expect(e).to.have.property('detalles');",
+            "});"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"detalles\": []\n}" },
+            "url": "{{baseUrl}}/ventas"
+          }
+        },
+        {
+          "name": "V-02a Registrar venta con cantidad 0",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('400 Bad Request', () => pm.response.to.have.status(400));",
+            "pm.test('validationErrors en la cantidad', () => pm.expect(pm.response.json().validationErrors).to.have.property('detalles[0].cantidad'));"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"clienteId\": {{clienteActivoId}},\n  \"detalles\": [ { \"productoId\": {{productoDecimalId}}, \"cantidad\": 0 } ]\n}" },
+            "url": "{{baseUrl}}/ventas"
+          }
+        },
+        {
+          "name": "V-02b Registrar venta con cantidad 2.5",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('400 Bad Request (la cantidad debe ser entera)', () => pm.response.to.have.status(400));"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"clienteId\": {{clienteActivoId}},\n  \"detalles\": [ { \"productoId\": {{productoDecimalId}}, \"cantidad\": 2.5 } ]\n}" },
+            "url": "{{baseUrl}}/ventas"
+          }
+        },
+        {
+          "name": "V-03 Registrar 3 unidades del producto con stock 2",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('409 Conflict', () => pm.response.to.have.status(409));",
+            "pm.test('Mensaje de stock insuficiente', () => pm.expect(pm.response.json().message).to.include('Stock insuficiente'));"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"clienteId\": {{clienteActivoId}},\n  \"detalles\": [ { \"productoId\": {{productoStock2Id}}, \"cantidad\": 3 } ]\n}" },
+            "url": "{{baseUrl}}/ventas"
+          }
+        },
+        {
+          "name": "V-05 Registrar venta con el mismo producto en dos líneas",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('400 Bad Request (producto repetido en el detalle)', () => pm.response.to.have.status(400));"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"clienteId\": {{clienteActivoId}},\n  \"detalles\": [\n    { \"productoId\": {{productoId}}, \"cantidad\": 1 },\n    { \"productoId\": {{productoId}}, \"cantidad\": 2 }\n  ]\n}" },
+            "url": "{{baseUrl}}/ventas"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mensajes",
+      "item": [
+        {
+          "name": "M-02 Registrar venta para el cliente inactivo",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('409 Conflict', () => pm.response.to.have.status(409));",
+            "pm.test('Mensaje de cliente inactivo', () => pm.expect(pm.response.json().message).to.eql('No se puede registrar una venta para un cliente inactivo'));"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"clienteId\": {{clienteInactivoId}},\n  \"detalles\": [ { \"productoId\": {{productoId}}, \"cantidad\": 1 } ]\n}" },
+            "url": "{{baseUrl}}/ventas"
+          }
+        },
+        {
+          "name": "M-03 Registrar venta con un producto inexistente",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('404 Not Found', () => pm.response.to.have.status(404));",
+            "pm.test('Mensaje de producto no encontrado', () => pm.expect(pm.response.json().message).to.include('Producto no encontrado'));"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"clienteId\": {{clienteActivoId}},\n  \"detalles\": [ { \"productoId\": 99999, \"cantidad\": 1 } ]\n}" },
+            "url": "{{baseUrl}}/ventas"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Consistencia",
+      "item": [
+        {
+          "name": "X-02 Anular una venta registrada",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('200 OK', () => pm.response.to.have.status(200));",
+            "pm.test('La venta queda ANULADA', () => pm.expect(pm.response.json().estado).to.eql('ANULADA'));"
+          ] } }],
+          "request": { "method": "PATCH", "url": "{{baseUrl}}/ventas/{{ventaId}}/anular" }
+        }
+      ]
+    }
+  ]
+}
