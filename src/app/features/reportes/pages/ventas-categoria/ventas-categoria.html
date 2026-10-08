@@ -1,0 +1,61 @@
+<section class="page">
+  <header class="page-header">
+    <h2>Reporte de ventas por categoría</h2>
+  </header>
+
+  <form [formGroup]="filtros" (ngSubmit)="generar()" class="card filtros">
+    <label>Desde <input class="input" type="date" formControlName="desde" /></label>
+    <label>Hasta <input class="input" type="date" formControlName="hasta" /></label>
+    <div class="botones">
+      <button type="button" class="btn" (click)="limpiar()">Limpiar</button>
+      <button type="submit" class="btn btn-primary" [disabled]="cargando()">Generar</button>
+    </div>
+  </form>
+
+  @if (error()) {
+    <div class="alerta">{{ error() }}</div>
+  }
+
+  @if (cargando()) {
+    <p>Generando reporte…</p>
+  } @else if (!error()) {
+    <p class="periodo">Ventas registradas (sin anuladas) · Periodo: {{ periodo() }}</p>
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>Categoría</th>
+          <th class="numero">Unidades vendidas</th>
+          <th class="numero">Monto</th>
+          <th class="col-barra">Comparación con la categoría que más vendió</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (f of filas(); track f.categoriaId) {
+          <tr>
+            <td>{{ f.categoriaNombre }}</td>
+            <td class="numero">{{ f.cantidadVendida }}</td>
+            <td class="numero">{{ f.montoTotal | currency: 'PEN' : 'S/ ' }}</td>
+            <td>
+              <div class="pista" [attr.aria-label]="(porcentaje(f) | number: '1.0-0') + ' % del monto mayor'">
+                <div class="barra" [style.width.%]="porcentaje(f)"></div>
+              </div>
+              <small class="dato">{{ participacion(f) | number: '1.1-1' }} % del monto general</small>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="4" class="vacio">No hay ventas en el periodo seleccionado.</td></tr>
+        }
+      </tbody>
+      @if (filas().length) {
+        <tfoot>
+          <tr>
+            <td>Total</td>
+            <td class="numero">{{ totalUnidades() }}</td>
+            <td class="numero">{{ totalMonto() | currency: 'PEN' : 'S/ ' }}</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      }
+    </table>
+  }
+</section>

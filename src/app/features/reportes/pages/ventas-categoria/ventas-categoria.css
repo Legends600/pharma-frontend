@@ -1,0 +1,11 @@
+.filtros { display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; align-items: end; max-width: 640px; margin-bottom: 16px; }
+.filtros label { display: flex; flex-direction: column; gap: 4px; font-size: 14px; font-weight: 600; }
+.botones { display: flex; gap: 8px; }
+.periodo { margin: 0 0 8px; color: #4b5563; font-size: 14px; }
+.numero { text-align: right; white-space: nowrap; }
+.col-barra { width: 40%; }
+.pista { height: 14px; border-radius: 999px; background: #e9f0f9; overflow: hidden; }
+.barra { height: 100%; border-radius: 999px; background: #0f2e5c; }
+.dato { color: #4b5563; font-size: 12px; }
+.vacio { text-align: center; color: #6b7280; padding: 24px; }
+tfoot td { font-weight: 700; color: #0f2e5c; border-top: 2px solid #0f2e5c; }
