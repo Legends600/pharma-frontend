@@ -7,6 +7,7 @@ import { Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { mensajeError } from '../../../../core/utils/http-error';
 import { redondear } from '../../../../core/utils/numeros';
+import { coincide } from '../../../../core/utils/texto';
 import { Cliente } from '../../../clientes/models/cliente.model';
 import { ClienteService } from '../../../clientes/services/cliente-service';
 import { Producto } from '../../../productos/models/producto.model';
@@ -19,6 +20,8 @@ interface LineaForm {
   productoId: FormControl<number | null>;
   cantidad: FormControl<number>;
 }
+
+const MAX_RESULTADOS = 6;
 
 @Component({
   selector: 'app-venta-form',
@@ -36,17 +39,19 @@ export class VentaForm implements OnInit {
   protected readonly clientes = signal<Cliente[]>([]);
   protected readonly productos = signal<Producto[]>([]);
   protected readonly cargando = signal(true);
+  protected readonly confirmando = signal(false);
   protected readonly guardando = signal(false);
   protected readonly error = signal<string | null>(null);
+  /** Si está marcado, el comprobante se imprime apenas se registra la venta. */
+  protected readonly imprimirAlRegistrar = signal(true);
 
   // ---------- Cabecera + detalle dinámico ----------
+  // El detalle empieza vacío: las líneas se crean desde el buscador de productos.
   protected readonly form = this.fb.group({
     clienteId: this.fb.control<number | null>(null, Validators.required),
+    // Validators.required exige al menos una línea (minLength(1) no marca error con un arreglo vacío).
     detalles: this.fb.array<FormGroup<LineaForm>>([], Validators.required),
   });
-
-  /** Producto elegido en el select para agregarlo como línea. */
-  protected readonly productoElegido = new FormControl<number | null>(null);
 
   get detalles() {
     return this.form.controls.detalles;
@@ -59,15 +64,69 @@ export class VentaForm implements OnInit {
     });
   }
 
-  agregarLinea(): void {
-    const id = this.productoElegido.value;
-    if (id === null) return;
-    this.detalles.push(this.nuevaLinea(id));
-    this.productoElegido.setValue(null);
-  }
-
   quitarLinea(indice: number): void {
     this.detalles.removeAt(indice);
+  }
+
+  // ---------- Buscadores (controles fuera del formulario de la venta) ----------
+  protected readonly buscarCliente = new FormControl('', { nonNullable: true });
+  protected readonly buscarProducto = new FormControl('', { nonNullable: true });
+
+  private readonly textoCliente = toSignal(this.buscarCliente.valueChanges, { initialValue: '' });
+  private readonly textoProducto = toSignal(this.buscarProducto.valueChanges, { initialValue: '' });
+
+  /** Clientes que coinciden por nombres, apellidos o DNI. */
+  protected readonly clientesEncontrados = computed(() => {
+    const texto = this.textoCliente().trim();
+    if (!texto) return [];
+    return this.clientes()
+      .filter(c => coincide(texto, c.nombres, c.apellidos, c.dni))
+      .slice(0, MAX_RESULTADOS);
+  });
+
+  /** Productos que coinciden por nombre o categoría. */
+  protected readonly productosEncontrados = computed(() => {
+    const texto = this.textoProducto().trim();
+    if (!texto) return [];
+    return this.productos()
+      .filter(p => coincide(texto, p.nombre, p.categoriaNombre))
+      .slice(0, MAX_RESULTADOS);
+  });
+
+  protected readonly hayBusquedaCliente = computed(() => this.textoCliente().trim().length > 0);
+  protected readonly hayBusquedaProducto = computed(() => this.textoProducto().trim().length > 0);
+
+  elegirCliente(cliente: Cliente): void {
+    this.form.controls.clienteId.setValue(cliente.id);
+    this.buscarCliente.setValue('');
+  }
+
+  cambiarCliente(): void {
+    this.form.controls.clienteId.setValue(null);
+  }
+
+  /** Si el producto ya está en el detalle, suma 1 a su cantidad; si no, crea la línea. */
+  agregarProducto(producto: Producto): void {
+    const linea = this.detalles.controls.find(l => l.controls.productoId.value === producto.id);
+    if (linea) {
+      linea.controls.cantidad.setValue(Number(linea.controls.cantidad.value) + 1);
+    } else {
+      this.detalles.push(this.nuevaLinea(producto.id));
+    }
+    this.buscarProducto.setValue('');
+  }
+
+  /** Enter en el buscador agrega el primer resultado sin enviar el formulario. */
+  agregarPrimero(evento: Event): void {
+    evento.preventDefault();
+    const primero = this.productosEncontrados()[0];
+    if (primero) this.agregarProducto(primero);
+  }
+
+  /** Cantidad que ya tiene un producto en el detalle (0 si no está). */
+  cantidadEnDetalle(productoId: number): number {
+    const linea = this.valor().detalles?.find(d => d.productoId === productoId);
+    return linea ? Number(linea.cantidad) || 0 : 0;
   }
 
   // ---------- Cálculos a partir del valor del formulario ----------
@@ -80,7 +139,12 @@ export class VentaForm implements OnInit {
       const producto = d.productoId ? this.productoPorId().get(d.productoId) : undefined;
       const cantidad = Number(d.cantidad) || 0;
       const precio = producto?.precio ?? 0;
-      return { producto, precio, subtotal: redondear(precio * cantidad) };
+      return {
+        producto,
+        precio,
+        subtotal: redondear(precio * cantidad),
+        excedeStock: !!producto && cantidad > producto.stock,
+      };
     }),
   );
 
@@ -88,6 +152,13 @@ export class VentaForm implements OnInit {
     redondear(this.lineas().reduce((suma, l) => suma + l.subtotal, 0)),
   );
 
+  protected readonly hayExcesoDeStock = computed(() => this.lineas().some(l => l.excedeStock));
+
+  protected readonly clienteElegido = computed(() =>
+    this.clientes().find(c => c.id === this.valor().clienteId),
+  );
+
+  // ---------- Carga inicial ----------
   ngOnInit(): void {
     forkJoin({
       clientes: this.clienteService.listar(0, 100),
@@ -105,21 +176,32 @@ export class VentaForm implements OnInit {
     });
   }
 
-  guardar(): void {
-    if (this.form.invalid) {
+  // ---------- Revisión, confirmación y registro ----------
+  revisar(): void {
+    if (this.form.invalid || this.hayExcesoDeStock()) {
       this.form.markAllAsTouched();
       return;
     }
+    this.error.set(null);
+    this.confirmando.set(true);
+  }
+
+  confirmar(): void {
     const v = this.form.getRawValue();
+    // Solo viajan ids y cantidades: el precio, los subtotales y el total los calcula el servidor.
     const dto: VentaRequest = {
       clienteId: Number(v.clienteId),
       detalles: v.detalles.map(d => ({ productoId: Number(d.productoId), cantidad: Number(d.cantidad) })),
     };
     this.guardando.set(true);
     this.ventaService.registrar(dto).subscribe({
-      next: () => this.router.navigate(['/ventas']),
+      next: venta =>
+        this.router.navigate(['/ventas', venta.id], {
+          queryParams: this.imprimirAlRegistrar() ? { nueva: 1, imprimir: 1 } : { nueva: 1 },
+        }),
       error: (err: HttpErrorResponse) => {
         this.guardando.set(false);
+        this.confirmando.set(false);
         this.error.set(mensajeError(err));
       },
     });
