@@ -33,21 +33,30 @@
 
       <table class="tabla detalle" formArrayName="detalles">
         <thead>
-          <tr><th>Producto</th><th>Cantidad</th><th></th></tr>
+          <tr><th>Producto</th><th>Precio</th><th>Cantidad</th><th>Subtotal</th><th></th></tr>
         </thead>
         <tbody>
           @for (linea of detalles.controls; track linea; let i = $index) {
             <tr [formGroupName]="i">
-              <td>{{ nombreProducto(linea.controls.productoId.value) }}</td>
+              <td>{{ lineas()[i]?.producto?.nombre }}</td>
+              <td>{{ lineas()[i]?.precio | currency: 'PEN' : 'S/ ' }}</td>
               <td><input class="input cantidad" type="number" min="1" step="1" formControlName="cantidad" /></td>
+              <td class="monto">{{ lineas()[i]?.subtotal | currency: 'PEN' : 'S/ ' }}</td>
               <td>
                 <button type="button" class="btn btn-peligro" (click)="quitarLinea(i)" aria-label="Quitar producto">✕</button>
               </td>
             </tr>
           } @empty {
-            <tr><td colspan="3" class="vacio">Aún no hay productos.</td></tr>
+            <tr><td colspan="5" class="vacio">Aún no hay productos.</td></tr>
           }
         </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3" class="monto">Total estimado</td>
+            <td class="monto total">{{ total() | currency: 'PEN' : 'S/ ' }}</td>
+            <td></td>
+          </tr>
+        </tfoot>
       </table>
 
       @if (form.controls.detalles.touched && form.controls.detalles.invalid) {

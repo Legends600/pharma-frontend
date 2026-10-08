@@ -1,9 +1,12 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { CurrencyPipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormControl, FormGroup, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { mensajeError } from '../../../../core/utils/http-error';
+import { redondear } from '../../../../core/utils/numeros';
 import { Cliente } from '../../../clientes/models/cliente.model';
 import { ClienteService } from '../../../clientes/services/cliente-service';
 import { Producto } from '../../../productos/models/producto.model';
@@ -19,7 +22,7 @@ interface LineaForm {
 
 @Component({
   selector: 'app-venta-form',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, CurrencyPipe],
   templateUrl: './venta-form.html',
   styleUrl: './venta-form.css',
 })
@@ -67,9 +70,23 @@ export class VentaForm implements OnInit {
     this.detalles.removeAt(indice);
   }
 
-  nombreProducto(id: number | null): string {
-    return this.productos().find(p => p.id === id)?.nombre ?? '';
-  }
+  // ---------- Cálculos a partir del valor del formulario ----------
+  private readonly valor = toSignal(this.form.valueChanges, { initialValue: this.form.value });
+
+  private readonly productoPorId = computed(() => new Map(this.productos().map(p => [p.id, p])));
+
+  protected readonly lineas = computed(() =>
+    (this.valor().detalles ?? []).map(d => {
+      const producto = d.productoId ? this.productoPorId().get(d.productoId) : undefined;
+      const cantidad = Number(d.cantidad) || 0;
+      const precio = producto?.precio ?? 0;
+      return { producto, precio, subtotal: redondear(precio * cantidad) };
+    }),
+  );
+
+  protected readonly total = computed(() =>
+    redondear(this.lineas().reduce((suma, l) => suma + l.subtotal, 0)),
+  );
 
   ngOnInit(): void {
     forkJoin({
