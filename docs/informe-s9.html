@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Informe S9 · Ventas y reporte por categoría</title>
+<style>
+  @page { size: A4; margin: 14mm 14mm 15mm 14mm; }
+  * { box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 9.2pt; line-height: 1.38; color: #1f2937; margin: 0; }
+  h1 { font-size: 15pt; color: #0f2e5c; margin: 0 0 2px; }
+  h2 { font-size: 11pt; color: #0f2e5c; margin: 10px 0 4px; padding-bottom: 2px; border-bottom: 1.5px solid #0f2e5c; }
+  p { margin: 3px 0 5px; text-align: justify; }
+  .sub { color: #475569; font-size: 8.6pt; margin-bottom: 6px; }
+  table { width: 100%; border-collapse: collapse; margin: 3px 0 7px; font-size: 8.3pt; }
+  th, td { border: 1px solid #cbd5e1; padding: 2px 5px; vertical-align: top; text-align: left; }
+  th { background: #0f2e5c; color: #fff; font-weight: 600; }
+  .ficha { break-inside: avoid; }
+  .ficha th { width: 17%; background: #e9f0f9; color: #0f2e5c; }
+  code { font-family: Consolas, monospace; font-size: 7.8pt; background: #eef2f8; padding: 0 3px; border-radius: 3px; }
+  pre { font-family: Consolas, monospace; font-size: 7.6pt; background: #0f172a; color: #e2e8f0; padding: 5px 7px; border-radius: 5px; margin: 3px 0; white-space: pre-wrap; line-height: 1.25; }
+  .alta { color: #b42318; font-weight: 700; } .media { color: #b45309; font-weight: 700; }
+  .ok { color: #166534; font-weight: 700; } .ko { color: #b42318; font-weight: 700; }
+  ol.q > li { margin-bottom: 5px; text-align: justify; }
+</style>
+</head>
+<body>
+
+<h1>Informe de hallazgos — Registro de ventas y reporte por categoría</h1>
+<div class="sub">
+  Lenguaje de Programación II · Actividad autónoma, Sesión 9 · Autor: Tineo · Repositorio <b>github.com/Legends600/pharma-frontend</b>,
+  rama <code>feature/pruebas-reporte-ventas-tineo</code> · Backend Practica, rama <code>feature/consultas-reportes</code> (<code>e409962</code>) ·
+  Solicitud de incorporación: <code>feature/pruebas-reporte-ventas-tineo → develop</code> (github.com/Legends600/pharma-frontend/pulls)
+</div>
+<p>La matriz completa está en <code>docs/matriz-pruebas-s9.md</code> y las evidencias, nombradas con el ID del caso, en <code>docs/evidencias-s9/</code>.
+Los casos de la SPA se ejecutaron en Chrome; los de la API, con la colección <code>postman/PharmaSoft-S9-Ventas.json</code> corrida con Newman (motor de Postman).
+La parte B agrega el feature <code>reportes</code> (<code>/reportes/ventas-por-categoria</code>, carga diferida y opción «Reportes» en el menú), verificado en los casos RP-01 a RP-04.</p>
+
+<h2>C1. Resumen de la ejecución</h2>
+<table>
+  <tr><th>Grupo</th><th>Casos</th><th>Pasan</th><th>Fallan</th><th>Hallazgo</th></tr>
+  <tr><td>Buscadores</td><td>3 (B-01, B-02, B-03*)</td><td class="ok">3</td><td>0</td><td>—</td></tr>
+  <tr><td>Cálculos</td><td>5 (C-01 a C-04, C-05*)</td><td class="ok">5</td><td>0</td><td>—</td></tr>
+  <tr><td>Validaciones</td><td>5 (V-01 a V-05)</td><td class="ok">3</td><td class="ko">2</td><td>H-03 (V-02 por API), H-04 (V-05)</td></tr>
+  <tr><td>Confirmación</td><td>3 (F-01, F-02, F-03*)</td><td class="ok">1</td><td class="ko">2</td><td>H-01 (F-02), H-02 (F-03)</td></tr>
+  <tr><td>Mensajes</td><td>3 (M-01, M-02, M-03*)</td><td class="ok">3</td><td>0</td><td>—</td></tr>
+  <tr><td>Impresión</td><td>1 (I-01)</td><td class="ok">1</td><td>0</td><td>—</td></tr>
+  <tr><td>Consistencia</td><td>2 (X-01, X-02*)</td><td class="ok">2</td><td>0</td><td>—</td></tr>
+  <tr><td><b>Total</b></td><td><b>22</b> (17 base + 5 propios*)</td><td class="ok">18</td><td class="ko">4</td><td></td></tr>
+</table>
+<p>Todos los cálculos coinciden con la operación hecha a mano y con el total del servidor (12.50 × 3 = 37.50; 18.90 × 3 = 56.70; 1.10 × 3 = 3.30; 53.60 → 15.80 al quitar la
+línea del medio). <code>redondear()</code> corrige los valores crudos de JavaScript (56.699999999999996 y 3.3000000000000003).</p>
+
+<h2>C2. Fichas de hallazgos</h2>
+<table class="ficha">
+  <tr><th>H-01 · F-02</th><td><b>Doble clic en «Confirmar venta» registra dos ventas.</b> Se enviaron dos <code>POST /ventas</code> (201 y 201) y se crearon las ventas N.º 28 y 29,
+  idénticas. El botón tiene <code>[disabled]="guardando()"</code>, pero el segundo clic llega antes de que Angular vuelva a pintar el botón deshabilitado.</td></tr>
+  <tr><th>Severidad</th><td class="alta">Alta: venta duplicada, stock descontado dos veces y total del día inflado.</td></tr>
+  <tr><th>Evidencia</th><td><code>F-02_spa.png</code> (registro de red con dos POST 201).</td></tr>
+  <tr><th>Causa probable</th><td>Frontend: <code>VentaForm.confirmar()</code> (<code>venta-form.ts:189</code>) no comprueba si ya hay un registro en curso; depende solo del atributo <code>disabled</code> de la plantilla.</td></tr>
+  <tr><th>Corrección</th><td><b>SPA (componente)</b>, porque el doble envío nace ahí: <code>if (this.guardando()) return;</code> como primera línea de <code>confirmar()</code>, antes de
+  <code>this.guardando.set(true)</code>. Como defensa adicional en el <b>backend</b>, aceptar una cabecera <code>Idempotency-Key</code> generada al abrir el resumen y rechazar con 409 una segunda venta con la misma clave.</td></tr>
+</table>
+
+<table class="ficha">
+  <tr><th>H-02 · F-03</th><td><b>Con el resumen abierto, el formulario sigue editable y «Confirmar» envía datos sin validar.</b> Se cambió la cantidad a 0 después de «Revisar venta» y
+  «Confirmar venta» envió el POST: el backend respondió 400 y la SPA mostró solo «Existen errores de validación», sin indicar la línea.</td></tr>
+  <tr><th>Severidad</th><td class="media">Media: los datos quedan bien (el backend rechaza), pero el resumen ya no corresponde a lo que se confirma y el mensaje no orienta.</td></tr>
+  <tr><th>Evidencia</th><td><code>F-03_spa.png</code> (POST 400 tras editar con el resumen abierto).</td></tr>
+  <tr><th>Causa probable</th><td>Frontend: <code>revisar()</code> (<code>venta-form.ts:180</code>) valida una sola vez y <code>confirmar()</code> no vuelve a validar; la tabla sigue habilitada mientras <code>confirmando()</code> es true.</td></tr>
+  <tr><th>Corrección</th><td><b>SPA</b>: en <code>revisar()</code> llamar a <code>this.form.disable()</code> y a <code>this.form.enable()</code> en «Volver» y en el error del POST; además, en <code>confirmar()</code>
+  repetir <code>if (this.form.invalid || this.hayExcesoDeStock()) { this.confirmando.set(false); return; }</code>.</td></tr>
+</table>
+
+<table class="ficha">
+  <tr><th>H-03 · V-02</th><td><b>La API acepta una cantidad decimal y la trunca.</b> <code>POST /ventas</code> con <code>"cantidad": 2.5</code> respondió 201 y guardó la venta N.º 26 con
+  cantidad 2 y total 2.20. La SPA sí lo bloquea (<code>Validators.pattern(/^\d+$/)</code>), así que la regla solo existe en la interfaz.</td></tr>
+  <tr><th>Severidad</th><td class="media">Media: se registra una cantidad distinta de la enviada sin avisar (es la misma causa que el hallazgo H-02 de la sesión 8 en el stock).</td></tr>
+  <tr><th>Evidencia</th><td><code>V-02b_postman.png</code> (petición con 2.5 → 201 con <code>"cantidad": 2</code>).</td></tr>
+  <tr><th>Causa probable</th><td>Backend: <code>DetalleVentaRequestDTO.cantidad</code> es <code>Integer</code> (línea 29) y Jackson convierte 2.5 en 2 antes de Bean Validation, así que <code>@Min(1)</code> no lo detecta.</td></tr>
+  <tr><th>Corrección</th><td><b>Backend (deserialización)</b>: <code>spring.jackson.deserialization.accept-float-as-int: false</code> en <code>application.yaml</code> y un
+  <code>@ExceptionHandler(HttpMessageNotReadableException.class)</code> en <code>GlobalExceptionHandler</code> que responda 400 con <code>ErrorResponseDTO</code>.</td></tr>
+</table>
+
+<table class="ficha">
+  <tr><th>H-04 · V-05</th><td><b>La API acepta el mismo producto en dos líneas.</b> La venta N.º 27 quedó con Loratadina 1 × 12.50 y Loratadina 2 × 25.00. El total (37.50) y el
+  stock (49 → 46) son correctos, pero el comprobante muestra dos líneas del mismo producto y la regla elegida exige una línea por producto (la SPA ya las agrupa en <code>agregarProducto()</code>).</td></tr>
+  <tr><th>Severidad</th><td class="media">Media: datos numéricos correctos, comprobante confuso y detalle distinto del que produce la SPA.</td></tr>
+  <tr><th>Evidencia</th><td><code>V-05_postman.png</code> (dos líneas con el mismo <code>productoId</code> → 201).</td></tr>
+  <tr><th>Causa probable</th><td>Backend: <code>VentaServiceImpl.registrar()</code> recorre <code>request.getDetalles()</code> (línea 69) sin comprobar repetidos.</td></tr>
+  <tr><th>Corrección</th><td><b>Backend (servicio)</b>, antes del bucle:
+<pre>Set&lt;Long&gt; vistos = new HashSet&lt;&gt;();
+for (DetalleVentaRequestDTO item : request.getDetalles()) {
+    if (!vistos.add(item.getProductoId())) {
+        throw new SolicitudInvalidaException("El producto " + item.getProductoId() + " está repetido en el detalle"); // → 400
+    }
+}</pre></td></tr>
+</table>
+
+<h2>C3. Preguntas de análisis</h2>
+<ol class="q">
+<li><b>¿Por qué el total de la SPA es solo «estimado»?</b> Porque se calcula con los precios que la SPA cargó al abrir el formulario
+(<code>productoService.listar()</code> en <code>VentaForm.ngOnInit()</code>); si un precio cambia mientras el cajero arma la venta, ese total queda
+desactualizado. El total definitivo lo calcula <code>VentaServiceImpl.registrar()</code> con <code>producto.getPrecio()</code> de la base, y por eso
+<code>VentaRequest</code> (<code>venta.model.ts</code>) solo lleva <code>clienteId</code>, <code>productoId</code> y <code>cantidad</code>. Si el backend aceptara
+el total del navegador, bastaría con Postman o las herramientas del navegador para registrar una venta de S/ 100 cobrando S/ 0.01: el precio quedaría
+en manos del cliente y los reportes de ventas dejarían de ser confiables.</li>
+
+<li><b>V-05: ¿aceptar el mismo producto en dos líneas?</b> No. Con el descuento condicional
+(<code>ProductoRepository.descontarStock()</code>) el stock final queda bien, pero cada línea se valida por separado: con stock 2 y líneas de 2 y 1, la
+segunda línea pasa la verificación previa (el producto leído todavía dice 2) y luego falla el <code>UPDATE</code>, de modo que el cajero recibiría
+«otra venta acaba de usar las unidades», un mensaje falso. Además, el comprobante muestra el producto dos veces y las cantidades por línea ya no
+representan «cuántas unidades de X se vendieron». Lo coherente es que la API rechace el detalle con 400 (H-04), igual que la SPA, que agrupa
+la cantidad en una sola línea.</li>
+
+<li><b>Mejora después del 409 de M-01.</b> Hoy la SPA conserva la venta y muestra el mensaje (el cajero pudo corregir sin recargar, venta N.º 31),
+pero su lista de productos sigue diciendo «Stock 2». Aplicaría: (a) volver a pedir los productos tras el 409 para actualizar el signal
+<code>productos</code>, con lo que <code>excedeStock</code> marcaría la línea al instante; (b) que el backend incluya el <code>productoId</code> y el stock
+disponible en el error, para resaltar esa fila y ofrecer «Ajustar a 0 disponibles / Quitar línea»; y (c) mover el foco a esa línea. Así el cajero
+corrige en un paso en lugar de buscar el problema.</li>
+
+<li><b>¿Por qué el reporte no se pagina y la consulta sí?</b> El reporte agrega las ventas con <code>GROUP BY</code> por categoría
+(<code>VentaRepository.reporteVentasPorCategoria()</code>): devuelve una fila por categoría, una cantidad pequeña y acotada que no crece con el número
+de ventas. Además, para la fila de totales (<code>totalUnidades</code> y <code>totalMonto</code>) y para el ancho de cada barra (<code>mayorMonto</code>) la vista
+necesita todas las filas a la vez. La consulta de ventas, en cambio, devuelve una fila por venta y crece sin límite con el tiempo: sin paginación,
+cada búsqueda traería miles de ventas con sus detalles.</li>
+</ol>
+</body>
+</html>

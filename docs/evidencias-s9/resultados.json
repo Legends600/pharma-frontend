@@ -1,0 +1,748 @@
+{
+  "preparacion": {
+    "lora": {
+      "id": 57,
+      "nombre": "Loratadina 10mg",
+      "precio": 12.5,
+      "stock": 50,
+      "estado": true,
+      "categoriaId": 92,
+      "categoriaNombre": "Antialérgicos",
+      "fechaCreacion": "2026-10-08T15:34:20.8579358",
+      "fechaModificacion": null
+    },
+    "amox": {
+      "id": 58,
+      "nombre": "Amoxicilina 500mg",
+      "precio": 18.9,
+      "stock": 40,
+      "estado": true,
+      "categoriaId": 91,
+      "categoriaNombre": "Antibióticos",
+      "fechaCreacion": "2026-10-08T15:34:20.936281",
+      "fechaModificacion": null
+    },
+    "gasa": {
+      "id": 59,
+      "nombre": "Gasa estéril",
+      "precio": 1.1,
+      "stock": 100,
+      "estado": true,
+      "categoriaId": 64,
+      "categoriaNombre": "Medicamentos",
+      "fechaCreacion": "2026-10-08T15:34:21.0113643",
+      "fechaModificacion": null
+    },
+    "jarabe": {
+      "id": 56,
+      "nombre": "Jarabe para la tos 120ml",
+      "precio": 12.9,
+      "stock": 2,
+      "estado": true,
+      "categoriaId": 64,
+      "categoriaNombre": "Medicamentos",
+      "fechaCreacion": "2026-10-08T14:58:16.8357218",
+      "fechaModificacion": "2026-10-08T15:34:21.1173334"
+    },
+    "activo": {
+      "id": 26,
+      "dni": "71000001",
+      "nombres": "María",
+      "apellidos": "Quispe Huamán",
+      "email": "cliente1@pharmasoft.test",
+      "telefono": "987650001",
+      "direccion": "Jr. Los Olivos 10",
+      "estado": true,
+      "fechaCreacion": "2026-09-27T22:57:22.2160885",
+      "fechaModificacion": null
+    },
+    "inactivo": {
+      "id": 32,
+      "dni": "72345678",
+      "nombre": "Aguilar Pinto, Valeria"
+    },
+    "ventaAnuladaPrevia": 21
+  },
+  "stockLoraV05": {
+    "antes": 49,
+    "despues": 46
+  },
+  "resultados": [
+    {
+      "id": "B-01",
+      "medio": "SPA",
+      "titulo": "Cliente inactivo por DNI y cliente activo por apellido sin tilde",
+      "red": [
+        {
+          "metodo": "GET",
+          "url": "/api/v1/clientes?pagina=0&tamanio=100&ordenarPor=apellidos&direccion=asc",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/productos?pagina=0&tamanio=100&ordenarPor=nombre&direccion=asc",
+          "estado": 200
+        }
+      ],
+      "alerta": null,
+      "nota": "DNI 72345678 (inactivo): «Ningún cliente activo coincide con la búsqueda.» · «huaman»: «Quispe Huamán, María DNI 71000001»",
+      "calculo": null,
+      "evidencia": "B-01_spa.png"
+    },
+    {
+      "id": "B-02",
+      "medio": "SPA",
+      "titulo": "Productos por parte del nombre y por categoría; Enter",
+      "red": [],
+      "alerta": null,
+      "nota": "«antibiot» (categoría): «Amoxicilina 500mg Antibióticos S/ 18.90 Stock 40 + Agregar» · Tras Enter: 1 línea(s) · resumen abierto: no",
+      "calculo": null,
+      "evidencia": "B-02_spa.png"
+    },
+    {
+      "id": "B-03",
+      "medio": "SPA",
+      "titulo": "Buscar con varias palabras («para 500»)",
+      "red": [],
+      "alerta": null,
+      "nota": "Resultados: «Paracetamol 500mg Medicamentos S/ 5.50 Stock 41 + Agregar»",
+      "calculo": null,
+      "evidencia": "B-03_spa.png"
+    },
+    {
+      "id": "C-01",
+      "medio": "SPA",
+      "titulo": "Una línea: producto de S/ 12.50, cantidad 3",
+      "red": [
+        {
+          "metodo": "GET",
+          "url": "/api/v1/clientes?pagina=0&tamanio=100&ordenarPor=apellidos&direccion=asc",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/productos?pagina=0&tamanio=100&ordenarPor=nombre&direccion=asc",
+          "estado": 200
+        }
+      ],
+      "alerta": null,
+      "nota": "Subtotal mostrado S/ 37.50 · total S/ 37.50",
+      "calculo": "12.50 × 3 = 37.50 · total = 37.50",
+      "evidencia": "C-01_spa.png"
+    },
+    {
+      "id": "C-02",
+      "medio": "SPA",
+      "titulo": "Producto de S/ 18.90, cantidad 3",
+      "red": [
+        {
+          "metodo": "GET",
+          "url": "/api/v1/clientes?pagina=0&tamanio=100&ordenarPor=apellidos&direccion=asc",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/productos?pagina=0&tamanio=100&ordenarPor=nombre&direccion=asc",
+          "estado": 200
+        }
+      ],
+      "alerta": null,
+      "nota": "Subtotal mostrado S/ 56.70 · total S/ 56.70 · JavaScript sin redondear: 18.9 * 3 = 56.699999999999996",
+      "calculo": "18.90 × 3 = 56.70",
+      "evidencia": "C-02_spa.png"
+    },
+    {
+      "id": "C-05",
+      "medio": "SPA",
+      "titulo": "Redondeo: producto de S/ 1.10, cantidad 3",
+      "red": [
+        {
+          "metodo": "GET",
+          "url": "/api/v1/clientes?pagina=0&tamanio=100&ordenarPor=apellidos&direccion=asc",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/productos?pagina=0&tamanio=100&ordenarPor=nombre&direccion=asc",
+          "estado": 200
+        }
+      ],
+      "alerta": null,
+      "nota": "Subtotal mostrado S/ 3.30 · JavaScript sin redondear: 1.1 * 3 = 3.3000000000000003",
+      "calculo": "1.10 × 3 = 3.30",
+      "evidencia": "C-05_spa.png"
+    },
+    {
+      "id": "C-03",
+      "medio": "SPA",
+      "titulo": "Tres líneas; luego quitar la del medio",
+      "red": [
+        {
+          "metodo": "GET",
+          "url": "/api/v1/clientes?pagina=0&tamanio=100&ordenarPor=apellidos&direccion=asc",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/productos?pagina=0&tamanio=100&ordenarPor=nombre&direccion=asc",
+          "estado": 200
+        }
+      ],
+      "alerta": null,
+      "nota": "Total con 3 líneas: S/ 53.60 · tras quitar la del medio: S/ 15.80",
+      "calculo": "12.50 × 1 + 18.90 × 2 + 1.10 × 3 = 12.50 + 37.80 + 3.30 = 53.60 · sin la del medio: 12.50 + 3.30 = 15.80",
+      "evidencia": "C-03_spa.png"
+    },
+    {
+      "id": "C-04",
+      "medio": "SPA",
+      "titulo": "Registrar la venta de C-03",
+      "red": [
+        {
+          "metodo": "POST",
+          "url": "/api/v1/ventas",
+          "estado": 201
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/ventas/25",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/clientes/26",
+          "estado": 200
+        }
+      ],
+      "alerta": null,
+      "nota": "Venta N.º 25 · total del comprobante (servidor): S/ 15.80 · estimado: S/ 15.80 · coinciden",
+      "calculo": "Total estimado de C-03 = 15.80",
+      "evidencia": "C-04_spa.png"
+    },
+    {
+      "id": "X-01",
+      "medio": "SPA",
+      "titulo": "Tras registrar, revisar Productos y la consulta de ventas",
+      "red": [
+        {
+          "metodo": "GET",
+          "url": "/api/v1/categorias",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/productos?pagina=0&tamanio=10&ordenarPor=nombre&direccion=asc",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/productos?pagina=0&tamanio=100&ordenarPor=nombre&direccion=asc",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/clientes?pagina=0&tamanio=100&ordenarPor=apellidos&direccion=asc",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/ventas/buscar?pagina=0&tamanio=10&ordenarPor=fecha&direccion=desc",
+          "estado": 200
+        }
+      ],
+      "alerta": null,
+      "nota": "Stock obtenido: Loratadina 10mg 49, Gasa estéril 97 · Consulta: venta 25 con 2 ítems y total S/ 15.80",
+      "calculo": "Stock esperado: Loratadina 10mg 50 − 1 = 49; Gasa estéril 100 − 3 = 97",
+      "evidencia": "X-01_spa.png"
+    },
+    {
+      "id": "V-01",
+      "medio": "SPA",
+      "titulo": "Revisar sin cliente ni productos",
+      "red": [],
+      "alerta": null,
+      "nota": "Resumen abierto: no",
+      "calculo": null,
+      "evidencia": "V-01_spa.png"
+    },
+    {
+      "id": "V-01",
+      "medio": "Postman",
+      "nombre": "V-01 Registrar venta sin cliente ni detalles",
+      "metodo": "POST",
+      "url": "http://localhost:8080/api/v1/ventas",
+      "cuerpo": "{\n  \"detalles\": []\n}",
+      "estado": 400,
+      "respuesta": "{\"timestamp\":\"2026-10-08T15:34:56.556143\",\"status\":400,\"error\":\"Bad Request\",\"message\":\"Existen errores de validación\",\"path\":\"/api/v1/ventas\",\"validationErrors\":{\"detalles\":\"La venta debe contener al menos un detalle\",\"clienteId\":\"El cliente es obligatorio\"}}",
+      "tests": [
+        {
+          "nombre": "400 Bad Request",
+          "ok": true
+        },
+        {
+          "nombre": "validationErrors con clienteId y detalles",
+          "ok": true
+        }
+      ],
+      "evidencia": "V-01_postman.png"
+    },
+    {
+      "id": "V-02",
+      "medio": "SPA",
+      "titulo": "Cantidad 0 y luego 2.5",
+      "red": [],
+      "alerta": null,
+      "nota": "Con 0: resumen no se abre · con 2.5: resumen no se abre",
+      "calculo": null,
+      "evidencia": "V-02_spa.png"
+    },
+    {
+      "id": "V-02a",
+      "medio": "Postman",
+      "nombre": "V-02a Registrar venta con cantidad 0",
+      "metodo": "POST",
+      "url": "http://localhost:8080/api/v1/ventas",
+      "cuerpo": "{\n  \"clienteId\": 26,\n  \"detalles\": [ { \"productoId\": 59, \"cantidad\": 0 } ]\n}",
+      "estado": 400,
+      "respuesta": "{\"timestamp\":\"2026-10-08T15:34:58.2894917\",\"status\":400,\"error\":\"Bad Request\",\"message\":\"Existen errores de validación\",\"path\":\"/api/v1/ventas\",\"validationErrors\":{\"detalles[0].cantidad\":\"La cantidad debe ser mayor que cero\"}}",
+      "tests": [
+        {
+          "nombre": "400 Bad Request",
+          "ok": true
+        },
+        {
+          "nombre": "validationErrors en la cantidad",
+          "ok": true
+        }
+      ],
+      "evidencia": "V-02a_postman.png"
+    },
+    {
+      "id": "V-02b",
+      "medio": "Postman",
+      "nombre": "V-02b Registrar venta con cantidad 2.5",
+      "metodo": "POST",
+      "url": "http://localhost:8080/api/v1/ventas",
+      "cuerpo": "{\n  \"clienteId\": 26,\n  \"detalles\": [ { \"productoId\": 59, \"cantidad\": 2.5 } ]\n}",
+      "estado": 201,
+      "respuesta": "{\"id\":26,\"fecha\":\"2026-10-08T15:34:58.7618628\",\"clienteId\":26,\"clienteNombre\":\"María Quispe Huamán\",\"estado\":\"REGISTRADA\",\"total\":2.2,\"detalles\":[{\"productoId\":59,\"productoNombre\":\"Gasa estéril\",\"cantidad\":2,\"precio\":1.1,\"subtotal\":2.2}]}",
+      "tests": [
+        {
+          "nombre": "400 Bad Request (la cantidad debe ser entera)",
+          "ok": false
+        }
+      ],
+      "evidencia": "V-02b_postman.png"
+    },
+    {
+      "id": "V-03",
+      "medio": "SPA",
+      "titulo": "Cantidad 3 del producto con stock 2",
+      "red": [],
+      "alerta": null,
+      "nota": "Resumen abierto: no",
+      "calculo": null,
+      "evidencia": "V-03_spa.png"
+    },
+    {
+      "id": "V-03",
+      "medio": "Postman",
+      "nombre": "V-03 Registrar 3 unidades del producto con stock 2",
+      "metodo": "POST",
+      "url": "http://localhost:8080/api/v1/ventas",
+      "cuerpo": "{\n  \"clienteId\": 26,\n  \"detalles\": [ { \"productoId\": 56, \"cantidad\": 3 } ]\n}",
+      "estado": 409,
+      "respuesta": "{\"timestamp\":\"2026-10-08T15:35:00.425759\",\"status\":409,\"error\":\"Conflict\",\"message\":\"Stock insuficiente para Jarabe para la tos 120ml. Disponible: 2, solicitado: 3\",\"path\":\"/api/v1/ventas\",\"validationErrors\":null}",
+      "tests": [
+        {
+          "nombre": "409 Conflict",
+          "ok": true
+        },
+        {
+          "nombre": "Mensaje de stock insuficiente",
+          "ok": true
+        }
+      ],
+      "evidencia": "V-03_postman.png"
+    },
+    {
+      "id": "V-04",
+      "medio": "SPA",
+      "titulo": "Agregar desde el buscador un producto que ya está en la venta",
+      "red": [
+        {
+          "metodo": "GET",
+          "url": "/api/v1/clientes?pagina=0&tamanio=100&ordenarPor=apellidos&direccion=asc",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/productos?pagina=0&tamanio=100&ordenarPor=nombre&direccion=asc",
+          "estado": 200
+        }
+      ],
+      "alerta": null,
+      "nota": "Aviso: «En la venta: 1» · líneas: 1 · cantidad: 2",
+      "calculo": null,
+      "evidencia": "V-04_spa.png"
+    },
+    {
+      "id": "V-05",
+      "medio": "Postman",
+      "nombre": "V-05 Registrar venta con el mismo producto en dos líneas",
+      "metodo": "POST",
+      "url": "http://localhost:8080/api/v1/ventas",
+      "cuerpo": "{\n  \"clienteId\": 26,\n  \"detalles\": [\n    { \"productoId\": 57, \"cantidad\": 1 },\n    { \"productoId\": 57, \"cantidad\": 2 }\n  ]\n}",
+      "estado": 201,
+      "respuesta": "{\"id\":27,\"fecha\":\"2026-10-08T15:35:02.1109774\",\"clienteId\":26,\"clienteNombre\":\"María Quispe Huamán\",\"estado\":\"REGISTRADA\",\"total\":37.5,\"detalles\":[{\"productoId\":57,\"productoNombre\":\"Loratadina 10mg\",\"cantidad\":1,\"precio\":12.5,\"subtotal\":12.5},{\"productoId\":57,\"productoNombre\":\"Loratadina 10mg\",\"cantidad\":2,\"precio\":12.5,\"subtotal\":25.0}]}",
+      "tests": [
+        {
+          "nombre": "400 Bad Request (producto repetido en el detalle)",
+          "ok": false
+        }
+      ],
+      "evidencia": "V-05_postman.png"
+    },
+    {
+      "id": "F-01",
+      "medio": "SPA",
+      "titulo": "Revisar y pulsar «Volver»",
+      "red": [],
+      "alerta": null,
+      "nota": "Resumen abierto tras «Volver»: no",
+      "calculo": null,
+      "evidencia": "F-01_spa.png"
+    },
+    {
+      "id": "F-02",
+      "medio": "SPA",
+      "titulo": "Pulsar «Confirmar venta» dos veces seguidas",
+      "red": [
+        {
+          "metodo": "POST",
+          "url": "/api/v1/ventas",
+          "estado": 201
+        },
+        {
+          "metodo": "POST",
+          "url": "/api/v1/ventas",
+          "estado": 201
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/ventas/28",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/clientes/26",
+          "estado": 200
+        }
+      ],
+      "alerta": null,
+      "nota": "POST enviados: 2 (201, 201)",
+      "calculo": null,
+      "evidencia": "F-02_spa.png"
+    },
+    {
+      "id": "F-03",
+      "medio": "SPA",
+      "titulo": "Con el resumen abierto, cambiar la cantidad a 0 y confirmar",
+      "red": [
+        {
+          "metodo": "POST",
+          "url": "/api/v1/ventas",
+          "estado": 400
+        }
+      ],
+      "alerta": "Existen errores de validación",
+      "nota": "POST enviados al confirmar: 1 (400)",
+      "calculo": null,
+      "evidencia": "F-03_spa.png"
+    },
+    {
+      "id": "M-01",
+      "medio": "SPA",
+      "titulo": "Dos pestañas venden a la vez las 2 unidades del producto con stock 2",
+      "red": [
+        {
+          "metodo": "GET",
+          "url": "/api/v1/clientes?pagina=0&tamanio=100&ordenarPor=apellidos&direccion=asc",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/productos?pagina=0&tamanio=100&ordenarPor=nombre&direccion=asc",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/clientes?pagina=0&tamanio=100&ordenarPor=apellidos&direccion=asc",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/productos?pagina=0&tamanio=100&ordenarPor=nombre&direccion=asc",
+          "estado": 200
+        },
+        {
+          "metodo": "POST",
+          "url": "/api/v1/ventas",
+          "estado": 201
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/ventas/30",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/clientes/26",
+          "estado": 200
+        },
+        {
+          "metodo": "POST",
+          "url": "/api/v1/ventas",
+          "estado": 409
+        },
+        {
+          "metodo": "POST",
+          "url": "/api/v1/ventas",
+          "estado": 201
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/ventas/31",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/clientes/26",
+          "estado": 200
+        }
+      ],
+      "alerta": null,
+      "nota": "Pestaña 1: POST 201 · Pestaña 2: POST 409 · Tras corregir sin recargar: venta N.º 31 · stock final del jarabe: 0",
+      "calculo": null,
+      "evidencia": "M-01_spa.png"
+    },
+    {
+      "id": "M-02",
+      "medio": "Postman",
+      "nombre": "M-02 Registrar venta para el cliente inactivo",
+      "metodo": "POST",
+      "url": "http://localhost:8080/api/v1/ventas",
+      "cuerpo": "{\n  \"clienteId\": 32,\n  \"detalles\": [ { \"productoId\": 57, \"cantidad\": 1 } ]\n}",
+      "estado": 409,
+      "respuesta": "{\"timestamp\":\"2026-10-08T15:35:19.1307201\",\"status\":409,\"error\":\"Conflict\",\"message\":\"No se puede registrar una venta para un cliente inactivo\",\"path\":\"/api/v1/ventas\",\"validationErrors\":null}",
+      "tests": [
+        {
+          "nombre": "409 Conflict",
+          "ok": true
+        },
+        {
+          "nombre": "Mensaje de cliente inactivo",
+          "ok": true
+        }
+      ],
+      "evidencia": "M-02_postman.png"
+    },
+    {
+      "id": "M-03",
+      "medio": "Postman",
+      "nombre": "M-03 Registrar venta con un producto inexistente",
+      "metodo": "POST",
+      "url": "http://localhost:8080/api/v1/ventas",
+      "cuerpo": "{\n  \"clienteId\": 26,\n  \"detalles\": [ { \"productoId\": 99999, \"cantidad\": 1 } ]\n}",
+      "estado": 404,
+      "respuesta": "{\"timestamp\":\"2026-10-08T15:35:19.5591756\",\"status\":404,\"error\":\"Not Found\",\"message\":\"Producto no encontrado con id: 99999\",\"path\":\"/api/v1/ventas\",\"validationErrors\":null}",
+      "tests": [
+        {
+          "nombre": "404 Not Found",
+          "ok": true
+        },
+        {
+          "nombre": "Mensaje de producto no encontrado",
+          "ok": true
+        }
+      ],
+      "evidencia": "M-03_postman.png"
+    },
+    {
+      "id": "I-01",
+      "medio": "SPA",
+      "titulo": "Imprimir al registrar, una venta anulada y la consulta filtrada",
+      "red": [
+        {
+          "metodo": "GET",
+          "url": "/api/v1/clientes?pagina=0&tamanio=100&ordenarPor=apellidos&direccion=asc",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/productos?pagina=0&tamanio=100&ordenarPor=nombre&direccion=asc",
+          "estado": 200
+        },
+        {
+          "metodo": "POST",
+          "url": "/api/v1/ventas",
+          "estado": 201
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/ventas/32",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/clientes/26",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/clientes?pagina=0&tamanio=100&ordenarPor=apellidos&direccion=asc",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/ventas/buscar?pagina=0&tamanio=10&ordenarPor=fecha&direccion=desc",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/ventas/buscar?pagina=0&tamanio=10&ordenarPor=fecha&direccion=desc&estado=ANULADA",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/ventas/21",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/clientes/1",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/clientes?pagina=0&tamanio=100&ordenarPor=apellidos&direccion=asc",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/ventas/buscar?pagina=0&tamanio=10&ordenarPor=fecha&direccion=desc",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/ventas/buscar?pagina=0&tamanio=10&ordenarPor=fecha&direccion=desc&clienteId=26&desde=2026-10-08",
+          "estado": 200
+        }
+      ],
+      "alerta": null,
+      "nota": "window.print() llamado: al registrar 1, anulada 1, consulta 1 · PDF guardados: I-01_al-registrar.pdf, I-01_anulada.pdf, I-01_consulta.pdf",
+      "calculo": null,
+      "evidencia": "I-01_spa.png"
+    },
+    {
+      "id": "X-02",
+      "medio": "Postman",
+      "nombre": "X-02 Anular una venta registrada",
+      "metodo": "PATCH",
+      "url": "http://localhost:8080/api/v1/ventas/32/anular",
+      "cuerpo": null,
+      "estado": 200,
+      "respuesta": "{\"id\":32,\"fecha\":\"2026-10-08T15:35:20.1917475\",\"clienteId\":26,\"clienteNombre\":\"María Quispe Huamán\",\"estado\":\"ANULADA\",\"total\":18.9,\"detalles\":[{\"productoId\":58,\"productoNombre\":\"Amoxicilina 500mg\",\"cantidad\":1,\"precio\":18.9,\"subtotal\":18.9}]}",
+      "tests": [
+        {
+          "nombre": "200 OK",
+          "ok": true
+        },
+        {
+          "nombre": "La venta queda ANULADA",
+          "ok": true
+        }
+      ],
+      "evidencia": "X-02_postman.png"
+    },
+    {
+      "id": "X-02",
+      "medio": "SPA",
+      "titulo": "Después de anular: stock repuesto y estado en la consulta",
+      "red": [
+        {
+          "metodo": "GET",
+          "url": "/api/v1/clientes?pagina=0&tamanio=100&ordenarPor=apellidos&direccion=asc",
+          "estado": 200
+        },
+        {
+          "metodo": "GET",
+          "url": "/api/v1/ventas/buscar?pagina=0&tamanio=10&ordenarPor=fecha&direccion=desc",
+          "estado": 200
+        }
+      ],
+      "alerta": null,
+      "nota": "Stock obtenido: 40 · Consulta: venta 32 en estado ANULADA",
+      "calculo": "Stock de Amoxicilina 500mg: 39 + 1 = 40",
+      "evidencia": "X-02_spa.png"
+    },
+    {
+      "id": "RP-01",
+      "medio": "SPA",
+      "titulo": "Reporte sin fechas (histórico)",
+      "red": [
+        {
+          "metodo": "GET",
+          "url": "/api/v1/reportes/ventas-por-categoria",
+          "estado": 200
+        }
+      ],
+      "alerta": null,
+      "nota": null,
+      "calculo": null,
+      "evidencia": "RP-01_spa.png"
+    },
+    {
+      "id": "RP-02",
+      "medio": "SPA",
+      "titulo": "Reporte de hoy",
+      "red": [
+        {
+          "metodo": "GET",
+          "url": "/api/v1/reportes/ventas-por-categoria?desde=2026-10-08&hasta=2026-10-08",
+          "estado": 200
+        }
+      ],
+      "alerta": null,
+      "nota": null,
+      "calculo": null,
+      "evidencia": "RP-02_spa.png"
+    },
+    {
+      "id": "RP-03",
+      "medio": "SPA",
+      "titulo": "Periodo sin ventas",
+      "red": [
+        {
+          "metodo": "GET",
+          "url": "/api/v1/reportes/ventas-por-categoria?desde=2020-01-01&hasta=2020-01-31",
+          "estado": 200
+        }
+      ],
+      "alerta": null,
+      "nota": null,
+      "calculo": null,
+      "evidencia": "RP-03_spa.png"
+    },
+    {
+      "id": "RP-04",
+      "medio": "SPA",
+      "titulo": "«Desde» posterior a «hasta»",
+      "red": [],
+      "alerta": "La fecha «desde» no puede ser posterior a la fecha «hasta».",
+      "nota": null,
+      "calculo": null,
+      "evidencia": "RP-04_spa.png"
+    }
+  ]
+}
