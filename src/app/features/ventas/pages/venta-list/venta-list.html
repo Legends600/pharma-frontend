@@ -3,7 +3,7 @@
     <h2>Consulta de ventas</h2>
     <div class="botones no-imprimir">
       <button type="button" class="btn" [disabled]="!resultado()?.contenido?.length" (click)="imprimirConsulta()">🖨️ Imprimir consulta</button>
-      <a routerLink="nueva" class="btn btn-primary">+ Nueva venta</a>
+      <a *appSiPermiso="'VENTAS_REGISTRAR'" routerLink="nueva" class="btn btn-primary">+ Nueva venta</a>
     </div>
   </header>
 

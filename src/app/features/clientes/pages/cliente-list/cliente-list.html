@@ -1,7 +1,7 @@
 <section class="page">
   <header class="page-header">
     <h2>Clientes</h2>
-    <a routerLink="nuevo" class="btn btn-primary">+ Nuevo cliente</a>
+    <a *appSiPermiso="'CLIENTES_ESCRIBIR'" routerLink="nuevo" class="btn btn-primary">+ Nuevo cliente</a>
   </header>
 
   <div class="herramientas">
@@ -39,7 +39,7 @@
           <th>Correo</th>
           <th>Teléfono</th>
           <th>Estado</th>
-          <th>Acciones</th>
+          <th *appSiPermiso="'CLIENTES_ESCRIBIR'">Acciones</th>
         </tr>
       </thead>
       <tbody>
@@ -52,7 +52,7 @@
             <td>
               <span class="badge" [class.inactivo]="!c.estado">{{ c.estado ? 'Activo' : 'Inactivo' }}</span>
             </td>
-            <td class="acciones">
+            <td *appSiPermiso="'CLIENTES_ESCRIBIR'" class="acciones">
               <a [routerLink]="[c.id, 'editar']" class="btn">Editar</a>
               <button type="button" class="btn btn-peligro" (click)="darDeBaja(c)">Dar de baja</button>
             </td>

@@ -4,6 +4,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { catchError, map, of, switchMap } from 'rxjs';
 import { mensajeError } from '../../../../core/utils/http-error';
+import { SiPermiso } from '../../../../shared/directives/si-permiso';
 import { Cliente } from '../../../clientes/models/cliente.model';
 import { ClienteService } from '../../../clientes/services/cliente-service';
 import { Venta } from '../../models/venta.model';
@@ -11,7 +12,7 @@ import { VentaService } from '../../services/venta-service';
 
 @Component({
   selector: 'app-venta-detalle',
-  imports: [RouterLink, CurrencyPipe, DatePipe],
+  imports: [RouterLink, CurrencyPipe, DatePipe, SiPermiso],
   templateUrl: './venta-detalle.html',
   styleUrl: './venta-detalle.css',
 })
