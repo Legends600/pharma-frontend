@@ -1,0 +1,10 @@
+<div role="status" aria-live="polite">
+  @if (visible()) {
+    <div class="aviso-sesion">
+      <span aria-hidden="true">⏱️</span>
+      <span class="texto">Su sesión vence en <strong>{{ tiempo() }}</strong>.</span>
+      <button type="button" class="btn btn-ahora" (click)="cerrarAhora()">Cerrar sesión ahora</button>
+      <button type="button" class="btn-ocultar" aria-label="Ocultar aviso" (click)="oculto.set(true)">×</button>
+    </div>
+  }
+</div>

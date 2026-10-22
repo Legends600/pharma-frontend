@@ -1,0 +1,12 @@
+:host { display: block; position: sticky; top: 0; z-index: 10; }
+.aviso-sesion {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding: 10px 14px;
+  border: 1px solid #f2a900; border-radius: 8px; background: #fff6dc; color: #7a5200;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.08);
+}
+.texto { flex: 1; }
+strong { font-variant-numeric: tabular-nums; }
+.btn-ahora { padding: 6px 12px; border-color: #7a5200; color: #7a5200; background: #fff; }
+.btn-ocultar { border: 0; background: none; color: inherit; font-size: 20px; line-height: 1; cursor: pointer; }
+
+@media print { :host { display: none; } }
