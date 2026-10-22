@@ -31,6 +31,11 @@ export class Login {
   });
 
   ingresar(): void {
+    // Un doble clic llega antes de que el botón se deshabilite en pantalla:
+    // mientras haya un envío en curso no se manda otro POST /auth/login.
+    if (this.enviando()) {
+      return;
+    }
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;

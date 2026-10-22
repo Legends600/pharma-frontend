@@ -26,6 +26,19 @@ export interface LoginResponse {
   permisos: Permiso[];
 }
 
+/** Lo que devuelve GET /auth/me (UsuarioResponseDTO): el usuario según el servidor. */
+export interface Perfil {
+  id: number;
+  username: string;
+  empleadoId: number;
+  empleadoNombre: string;
+  cargo: string;
+  roles: string[];
+  permisos: Permiso[];
+  estado: boolean;
+  fechaCreacion: string;
+}
+
 /** Sesión guardada en el navegador. */
 export interface Sesion {
   token: string;
