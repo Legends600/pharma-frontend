@@ -16,3 +16,5 @@
   color: #fff; font: inherit; font-size: 14px; cursor: pointer;
 }
 .btn-salir:hover { background: rgb(255 255 255 / 0.12); }
+.mi-cuenta { color: #dbe4f3; font-size: 14px; text-decoration: none; padding: 6px 8px; border-radius: 8px; }
+.mi-cuenta:hover, .mi-cuenta.activo { color: #fff; background: rgb(255 255 255 / 0.12); }

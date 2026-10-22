@@ -3,10 +3,13 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { map, Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { LoginRequest, LoginResponse, Permiso, Sesion } from './auth.model';
+import { LoginRequest, LoginResponse, Perfil, Permiso, Sesion } from './auth.model';
 
 /** Clave con la que se guarda la sesión en sessionStorage. */
 const CLAVE_SESION = 'pharmasoft.sesion';
+
+/** Segundos antes del vencimiento en los que se muestra el aviso. */
+const SEGUNDOS_AVISO = 120;
 
 /**
  * Única fuente de verdad sobre la sesión del usuario.
@@ -15,7 +18,8 @@ const CLAVE_SESION = 'pharmasoft.sesion';
  *   reaccionan solos cuando cambia.
  * - Se guarda en sessionStorage para sobrevivir a una recarga (F5), pero
  *   se borra al cerrar el navegador: la botica usa computadoras compartidas.
- * - Un temporizador cierra la sesión cuando el token vence.
+ * - Un temporizador cierra la sesión cuando el token vence y otro, cada
+ *   segundo, lleva la cuenta regresiva para el aviso previo.
  */
 @Service()
 export class AuthService {
@@ -25,9 +29,17 @@ export class AuthService {
 
   private readonly sesionActual = signal<Sesion | null>(this.leerSesionGuardada());
   private temporizador?: ReturnType<typeof setTimeout>;
+  private cuentaRegresiva?: ReturnType<typeof setInterval>;
 
   readonly sesion = this.sesionActual.asReadonly();
   readonly autenticado = computed(() => this.sesionActual() !== null);
+
+  /** Segundos que le quedan al token; lo actualiza un setInterval de un segundo. */
+  readonly segundosRestantes = signal(0);
+  /** true cuando hay sesión y faltan dos minutos o menos para que venza. */
+  readonly porVencer = computed(
+    () => this.autenticado() && this.segundosRestantes() <= SEGUNDOS_AVISO,
+  );
 
   constructor() {
     const sesion = this.sesionActual();
@@ -56,6 +68,9 @@ export class AuthService {
    */
   cerrarSesion(motivo?: 'expirada', volverA?: string): void {
     clearTimeout(this.temporizador);
+    // Sin temporizadores huérfanos: la cuenta regresiva se detiene con la sesión.
+    clearInterval(this.cuentaRegresiva);
+    this.segundosRestantes.set(0);
     sessionStorage.removeItem(CLAVE_SESION);
     this.sesionActual.set(null);
 
@@ -76,6 +91,10 @@ export class AuthService {
     return this.sesionActual()?.permisos.includes(permiso) ?? false;
   }
 
+  /** Datos del usuario tal como los conoce el servidor (GET /auth/me). */
+  obtenerPerfil(): Observable<Perfil> {
+    return this.http.get<Perfil>(`${this.url}/me`);
+  }
   private iniciar(sesion: Sesion): void {
     sessionStorage.setItem(CLAVE_SESION, JSON.stringify(sesion));
     this.sesionActual.set(sesion);
@@ -89,6 +108,19 @@ export class AuthService {
       () => this.cerrarSesion('expirada', this.router.url),
       Math.max(restante, 0),
     );
+    this.iniciarCuentaRegresiva(sesion);
+  }
+
+  /**
+   * Actualiza segundosRestantes cada segundo. El valor vive en un signal:
+   * en una aplicación zoneless un número normal no avisaría a la plantilla.
+   */
+  private iniciarCuentaRegresiva(sesion: Sesion): void {
+    clearInterval(this.cuentaRegresiva);
+    const actualizar = () =>
+      this.segundosRestantes.set(Math.max(0, Math.floor((sesion.expiraEn - Date.now()) / 1000)));
+    actualizar();
+    this.cuentaRegresiva = setInterval(actualizar, 1000);
   }
 
   /** Recupera la sesión tras recargar la página; descarta la vencida o dañada. */
