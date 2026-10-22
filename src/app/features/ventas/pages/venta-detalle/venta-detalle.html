@@ -70,7 +70,7 @@
 
       <div class="acciones no-imprimir">
         <a routerLink="/ventas" class="btn">Volver a la consulta</a>
-        <a routerLink="/ventas/nueva" class="btn">Nueva venta</a>
+        <a *appSiPermiso="'VENTAS_REGISTRAR'" routerLink="/ventas/nueva" class="btn">Nueva venta</a>
         <button type="button" class="btn btn-primary" (click)="imprimirComprobante()">🖨️ Imprimir</button>
       </div>
     </article>
