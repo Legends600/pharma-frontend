@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { map, Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { LoginRequest, LoginResponse, Permiso, Sesion } from './auth.model';
+import { LoginRequest, LoginResponse, Perfil, Permiso, Sesion } from './auth.model';
 
 /** Clave con la que se guarda la sesión en sessionStorage. */
 const CLAVE_SESION = 'pharmasoft.sesion';
@@ -89,6 +89,11 @@ export class AuthService {
   /** true si el usuario tiene el permiso (lee un signal: es reactivo). */
   tienePermiso(permiso: Permiso): boolean {
     return this.sesionActual()?.permisos.includes(permiso) ?? false;
+  }
+
+  /** Datos del usuario tal como los conoce el servidor (GET /auth/me). */
+  obtenerPerfil(): Observable<Perfil> {
+    return this.http.get<Perfil>(`${this.url}/me`);
   }
   private iniciar(sesion: Sesion): void {
     sessionStorage.setItem(CLAVE_SESION, JSON.stringify(sesion));

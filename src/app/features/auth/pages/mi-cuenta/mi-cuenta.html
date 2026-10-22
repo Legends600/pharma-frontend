@@ -1,0 +1,60 @@
+<section class="page">
+  <header class="page-header">
+    <h2>Mi cuenta</h2>
+  </header>
+
+  @if (permisosCambiaron()) {
+    <div class="aviso" role="alert">
+      Sus permisos cambiaron. Cierre sesión y vuelva a ingresar para actualizarlos.
+    </div>
+  }
+  @if (error()) {
+    <div class="alerta">
+      {{ error() }}
+      <button type="button" class="btn" (click)="cargar()">Reintentar</button>
+    </div>
+  }
+
+  @if (cargando()) {
+    <p>Cargando sus datos…</p>
+  } @else if (perfil(); as p) {
+    <div class="card datos">
+      <dl>
+        <div><dt>Nombre completo</dt><dd>{{ p.empleadoNombre }}</dd></div>
+        <div><dt>Usuario</dt><dd>{{ p.username }}</dd></div>
+        <div><dt>Cargo</dt><dd>{{ p.cargo }}</dd></div>
+        <div>
+          <dt>Roles</dt>
+          <dd>
+            @for (rol of p.roles; track rol) {
+              <span class="chip">{{ rol }}</span>
+            }
+          </dd>
+        </div>
+      </dl>
+    </div>
+
+    <h3>Permisos según el servidor</h3>
+    <table class="tabla">
+      <thead>
+        <tr><th>Módulo</th><th>Permisos</th></tr>
+      </thead>
+      <tbody>
+        @for (m of modulos; track m.nombre) {
+          <tr>
+            <td>{{ m.nombre }}</td>
+            <td class="permisos">
+              @for (item of m.permisos; track item.permiso) {
+                <span class="permiso" [class.no]="!tiene(item.permiso)" [title]="item.permiso">
+                  <span aria-hidden="true">{{ tiene(item.permiso) ? '✔' : '✘' }}</span>
+                  {{ item.etiqueta }}
+                  <span class="sr-only">{{ tiene(item.permiso) ? '(permitido)' : '(no permitido)' }}</span>
+                </span>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</section>
