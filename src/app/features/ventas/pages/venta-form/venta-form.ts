@@ -1,10 +1,11 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, inject, OnInit, signal } from '@angular/core';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { CurrencyPipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormControl, FormGroup, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { debounceTime, distinctUntilChanged, map } from 'rxjs';
+import { AuthService } from '../../../../core/auth/auth-service';
 import { mensajeError } from '../../../../core/utils/http-error';
 import { redondear } from '../../../../core/utils/numeros';
 import { coincide } from '../../../../core/utils/texto';
@@ -23,9 +24,21 @@ interface LineaForm {
 
 const MAX_RESULTADOS = 6;
 
+/**
+ * Venta en curso guardada en sessionStorage: si el token vence a mitad de la
+ * venta, tras iniciar sesión otra vez se recupera (INC-06). Solo se restaura
+ * para el mismo usuario y se borra al registrar o cancelar.
+ */
+const CLAVE_BORRADOR = 'pharmasoft.venta-borrador';
+interface Borrador {
+  usuario: string;
+  clienteId: number | null;
+  lineas: { producto: Producto; cantidad: number }[];
+}
+
 @Component({
   selector: 'app-venta-form',
-  imports: [ReactiveFormsModule, RouterLink, CurrencyPipe],
+  imports: [ReactiveFormsModule, CurrencyPipe],
   templateUrl: './venta-form.html',
   styleUrl: './venta-form.css',
 })
@@ -35,8 +48,11 @@ export class VentaForm implements OnInit {
   private readonly clienteService = inject(ClienteService);
   private readonly productoService = inject(ProductoService);
   private readonly router = inject(Router);
+  private readonly auth = inject(AuthService);
 
   protected readonly clientes = signal<Cliente[]>([]);
+  /** true si al abrir la página se recuperó una venta que quedó a medias. */
+  protected readonly recuperada = signal(false);
   /** Productos ya agregados al detalle (precio y stock con los que se eligieron). */
   private readonly seleccionados = signal(new Map<number, Producto>());
   protected readonly cargando = signal(true);
@@ -186,6 +202,51 @@ export class VentaForm implements OnInit {
     this.clientes().find(c => c.id === this.valor().clienteId),
   );
 
+  // ---------- Borrador de la venta en curso ----------
+  constructor() {
+    // Primero se restaura (antes de que el effect guarde el formulario vacío).
+    this.restaurarBorrador();
+    effect(() => {
+      const v = this.valor();
+      const usuario = this.auth.sesion()?.username;
+      if (!usuario) return; // al vencer la sesión se conserva lo último guardado
+      const lineas = (v.detalles ?? [])
+        .map(d => ({ producto: this.seleccionados().get(Number(d.productoId))!, cantidad: Number(d.cantidad) || 1 }))
+        .filter(l => !!l.producto);
+      if (!v.clienteId && lineas.length === 0) {
+        sessionStorage.removeItem(CLAVE_BORRADOR);
+        return;
+      }
+      const borrador: Borrador = { usuario, clienteId: v.clienteId ?? null, lineas };
+      sessionStorage.setItem(CLAVE_BORRADOR, JSON.stringify(borrador));
+    });
+  }
+
+  private restaurarBorrador(): void {
+    try {
+      const borrador = JSON.parse(sessionStorage.getItem(CLAVE_BORRADOR) ?? 'null') as Borrador | null;
+      if (!borrador || borrador.usuario !== this.auth.sesion()?.username) {
+        sessionStorage.removeItem(CLAVE_BORRADOR);
+        return;
+      }
+      this.seleccionados.set(new Map(borrador.lineas.map(l => [l.producto.id, l.producto])));
+      for (const l of borrador.lineas) {
+        const linea = this.nuevaLinea(l.producto.id);
+        linea.controls.cantidad.setValue(l.cantidad);
+        this.detalles.push(linea);
+      }
+      this.form.controls.clienteId.setValue(borrador.clienteId);
+      this.recuperada.set(true);
+    } catch {
+      sessionStorage.removeItem(CLAVE_BORRADOR);
+    }
+  }
+
+  cancelar(): void {
+    sessionStorage.removeItem(CLAVE_BORRADOR);
+    this.router.navigate(['/ventas']);
+  }
+
   // ---------- Carga inicial ----------
   ngOnInit(): void {
     // Los productos ya no se descargan aquí: se buscan en el servidor al teclear.
@@ -220,10 +281,12 @@ export class VentaForm implements OnInit {
     };
     this.guardando.set(true);
     this.ventaService.registrar(dto).subscribe({
-      next: venta =>
+      next: venta => {
+        sessionStorage.removeItem(CLAVE_BORRADOR);
         this.router.navigate(['/ventas', venta.id], {
           queryParams: this.imprimirAlRegistrar() ? { nueva: 1, imprimir: 1 } : { nueva: 1 },
-        }),
+        });
+      },
       error: (err: HttpErrorResponse) => {
         this.guardando.set(false);
         this.confirmando.set(false);

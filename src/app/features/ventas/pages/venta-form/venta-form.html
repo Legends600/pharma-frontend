@@ -1,6 +1,12 @@
 <section class="page">
   <h2>Nueva venta</h2>
 
+  @if (recuperada()) {
+    <div class="aviso" role="status" data-testid="venta-recuperada">
+      Se recuperó la venta que estaba en curso. Revise el cliente y las cantidades antes de registrarla.
+    </div>
+  }
+
   @if (error()) {
     <div class="alerta">{{ error() }}</div>
   }
@@ -113,7 +119,7 @@
       }
 
       <div class="acciones">
-        <a routerLink="/ventas" class="btn">Cancelar</a>
+        <button type="button" class="btn" (click)="cancelar()">Cancelar</button>
         <button type="submit" class="btn btn-primary">Revisar venta</button>
       </div>
     </form>

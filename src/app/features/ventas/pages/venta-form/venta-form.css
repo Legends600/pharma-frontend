@@ -37,3 +37,4 @@
 .confirmacion h3 { margin-top: 0; color: #0f2e5c; }
 .nota { color: #6b7280; font-size: 14px; }
 .check { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-weight: 600; }
+.aviso { padding: 10px 14px; margin-bottom: 12px; border-radius: 8px; background: #fff6dc; color: #7a5200; }
