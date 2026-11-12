@@ -66,6 +66,13 @@ export const routes: Routes = [
           import('./features/reportes/reportes.routes').then(m => m.REPORTES_ROUTES),
       },
       {
+        path: 'auditoria',
+        title: 'Auditoría',
+        canActivate: [permisoGuard],
+        data: { permiso: 'USUARIOS_ADMINISTRAR' },
+        loadComponent: () => import('./features/auditoria/auditoria').then(m => m.Auditoria),
+      },
+      {
         path: 'acceso-denegado',
         title: 'Acceso denegado',
         loadComponent: () =>
