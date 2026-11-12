@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { iniciarSesion } from './apoyo';
 
-test('flujo principal: el vendedor registra una venta y el stock baja', async ({ page }) => {
+test('E2E-07 flujo principal: el vendedor registra una venta y el stock baja', async ({ page }) => {
   await iniciarSesion(page, 'vendedor', '/ventas/nueva');
 
   // Cliente

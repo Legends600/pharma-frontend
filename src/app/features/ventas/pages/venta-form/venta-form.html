@@ -8,7 +8,7 @@
   }
 
   @if (error()) {
-    <div class="alerta">{{ error() }}</div>
+    <div class="alerta" role="alert">{{ error() }}</div>
   }
 
   @if (cargando()) {

@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { iniciarSesion } from './apoyo';
 
-test('productos se paginan en el servidor con la página en la URL', async ({ page }) => {
+test('E2E-06 productos se paginan en el servidor con la página en la URL', async ({ page }) => {
   await iniciarSesion(page, 'admin', '/productos');
   const filas = page.getByTestId('tabla-productos').locator('tbody tr');
 
