@@ -1,9 +1,4 @@
-/** Refleja el PaginaResponseDTO del backend; sirve para cualquier listado paginado. */
-export interface PaginaResponse<T> {
-  contenido: T[];
-  pagina: number;
-  tamanio: number;
-  totalElementos: number;
-  totalPaginas: number;
-  ultima: boolean;
-}
+import { Pagina } from './pagina';
+
+/** Nombre anterior del modelo de página; se conserva para los servicios existentes. */
+export type PaginaResponse<T> = Pagina<T>;
