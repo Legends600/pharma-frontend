@@ -1,10 +1,10 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { CurrencyPipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormControl, FormGroup, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { debounceTime, distinctUntilChanged, map } from 'rxjs';
 import { mensajeError } from '../../../../core/utils/http-error';
 import { redondear } from '../../../../core/utils/numeros';
 import { coincide } from '../../../../core/utils/texto';
@@ -37,7 +37,8 @@ export class VentaForm implements OnInit {
   private readonly router = inject(Router);
 
   protected readonly clientes = signal<Cliente[]>([]);
-  protected readonly productos = signal<Producto[]>([]);
+  /** Productos ya agregados al detalle (precio y stock con los que se eligieron). */
+  private readonly seleccionados = signal(new Map<number, Producto>());
   protected readonly cargando = signal(true);
   protected readonly confirmando = signal(false);
   protected readonly guardando = signal(false);
@@ -73,7 +74,33 @@ export class VentaForm implements OnInit {
   protected readonly buscarProducto = new FormControl('', { nonNullable: true });
 
   private readonly textoCliente = toSignal(this.buscarCliente.valueChanges, { initialValue: '' });
-  private readonly textoProducto = toSignal(this.buscarProducto.valueChanges, { initialValue: '' });
+  // Se espera 300 ms sin teclear antes de consultar al servidor.
+  private readonly textoProducto = toSignal(
+    this.buscarProducto.valueChanges.pipe(
+      map(t => t.trim()),
+      debounceTime(300),
+      distinctUntilChanged(),
+    ),
+    { initialValue: '' },
+  );
+
+  /**
+   * La búsqueda la hace el servidor sobre todo el catálogo: solo activos con
+   * stock (disponibles=true), al precio vigente. Antes se filtraban los 100
+   * primeros productos descargados al abrir la página (INC-04).
+   */
+  private readonly busquedaProductos = rxResource({
+    params: () => this.textoProducto() || undefined,
+    stream: ({ params: nombre }) =>
+      this.productoService.listar({
+        pagina: 0,
+        tamanio: MAX_RESULTADOS,
+        ordenarPor: 'nombre',
+        direccion: 'asc',
+        nombre,
+        disponibles: true,
+      }),
+  });
 
   /** Clientes que coinciden por nombres, apellidos o DNI. */
   protected readonly clientesEncontrados = computed(() => {
@@ -84,17 +111,17 @@ export class VentaForm implements OnInit {
       .slice(0, MAX_RESULTADOS);
   });
 
-  /** Productos que coinciden por nombre o categoría. */
-  protected readonly productosEncontrados = computed(() => {
-    const texto = this.textoProducto().trim();
-    if (!texto) return [];
-    return this.productos()
-      .filter(p => coincide(texto, p.nombre, p.categoriaNombre))
-      .slice(0, MAX_RESULTADOS);
-  });
+  /** Productos que coinciden por nombre (respuesta del servidor). */
+  protected readonly productosEncontrados = computed(() =>
+    this.textoProducto() && this.busquedaProductos.hasValue()
+      ? this.busquedaProductos.value().contenido
+      : [],
+  );
+
+  protected readonly buscandoProductos = computed(() => this.busquedaProductos.isLoading());
 
   protected readonly hayBusquedaCliente = computed(() => this.textoCliente().trim().length > 0);
-  protected readonly hayBusquedaProducto = computed(() => this.textoProducto().trim().length > 0);
+  protected readonly hayBusquedaProducto = computed(() => this.textoProducto().length > 0);
 
   elegirCliente(cliente: Cliente): void {
     this.form.controls.clienteId.setValue(cliente.id);
@@ -107,6 +134,7 @@ export class VentaForm implements OnInit {
 
   /** Si el producto ya está en el detalle, suma 1 a su cantidad; si no, crea la línea. */
   agregarProducto(producto: Producto): void {
+    this.seleccionados.update(m => new Map(m).set(producto.id, producto));
     const linea = this.detalles.controls.find(l => l.controls.productoId.value === producto.id);
     if (linea) {
       linea.controls.cantidad.setValue(Number(linea.controls.cantidad.value) + 1);
@@ -132,7 +160,7 @@ export class VentaForm implements OnInit {
   // ---------- Cálculos a partir del valor del formulario ----------
   private readonly valor = toSignal(this.form.valueChanges, { initialValue: this.form.value });
 
-  private readonly productoPorId = computed(() => new Map(this.productos().map(p => [p.id, p])));
+  private readonly productoPorId = this.seleccionados.asReadonly();
 
   protected readonly lineas = computed(() =>
     (this.valor().detalles ?? []).map(d => {
@@ -160,13 +188,10 @@ export class VentaForm implements OnInit {
 
   // ---------- Carga inicial ----------
   ngOnInit(): void {
-    forkJoin({
-      clientes: this.clienteService.listar(0, 100),
-      productos: this.productoService.listar(0, 100, 'nombre', 'asc'),
-    }).subscribe({
-      next: ({ clientes, productos }) => {
+    // Los productos ya no se descargan aquí: se buscan en el servidor al teclear.
+    this.clienteService.listar(0, 100).subscribe({
+      next: clientes => {
         this.clientes.set(clientes.contenido.filter(c => c.estado));
-        this.productos.set(productos.contenido.filter(p => p.estado && p.stock > 0));
         this.cargando.set(false);
       },
       error: (err: HttpErrorResponse) => {
