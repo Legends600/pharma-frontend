@@ -8,74 +8,70 @@
     <label>
       Categoría
       <select class="input" (change)="filtrarPorCategoria($any($event.target).value)">
-        <option value="">Todas</option>
+        <option value="" [selected]="!categoriaId()">Todas</option>
         @for (c of categorias(); track c.id) {
-          <option [value]="c.id" [selected]="c.id === categoriaFiltro()">{{ c.nombre }}{{ c.estado ? '' : ' (inactiva)' }}</option>
+          <option [value]="c.id" [selected]="c.id === categoriaId()">{{ c.nombre }}{{ c.estado ? '' : ' (inactiva)' }}</option>
         }
       </select>
     </label>
-    <label>
-      Por página
-      <select class="input" [value]="tamanio()" (change)="cambiarTamanio($any($event.target).value)">
-        <option value="5">5</option>
-        <option value="10">10</option>
-        <option value="20">20</option>
-        <option value="100">100</option>
-      </select>
-    </label>
+    @if (productos.isLoading()) {
+      <span class="cargando" role="status">Cargando…</span>
+    }
   </div>
 
-  @if (notaFiltro(); as nota) {
-    <p class="nota">{{ nota }}</p>
+  @if (nombreCategoria(); as nombre) {
+    <p class="nota">Mostrando los productos de la categoría {{ nombre }}.</p>
   }
 
-  @if (error()) {
-    <div class="alerta">{{ error() }}</div>
+  @if (error(); as e) {
+    <div class="alerta" role="alert">{{ e }}</div>
   }
 
-  @if (cargando()) {
-    <p>Cargando productos…</p>
-  } @else {
-    <table class="tabla">
+  @if (pag(); as p) {
+    <table class="tabla" data-testid="tabla-productos" [class.recargando]="productos.isLoading()">
       <thead>
         <tr>
-          <th><button type="button" class="orden" (click)="ordenar('nombre')">Nombre {{ indicadorOrden('nombre') }}</button></th>
+          <th><button type="button" class="orden" (click)="ordenarPor('nombre')">Nombre {{ indicadorOrden('nombre') }}</button></th>
           <th>Categoría</th>
-          <th><button type="button" class="orden" (click)="ordenar('precio')">Precio {{ indicadorOrden('precio') }}</button></th>
-          <th><button type="button" class="orden" (click)="ordenar('stock')">Stock {{ indicadorOrden('stock') }}</button></th>
+          <th><button type="button" class="orden" (click)="ordenarPor('precio')">Precio {{ indicadorOrden('precio') }}</button></th>
+          <th><button type="button" class="orden" (click)="ordenarPor('stock')">Stock {{ indicadorOrden('stock') }}</button></th>
           <th>Estado</th>
           <th *appSiPermiso="'CATALOGO_ESCRIBIR'">Acciones</th>
         </tr>
       </thead>
       <tbody>
-        @for (p of productos(); track p.id) {
+        @for (prod of p.contenido; track prod.id) {
           <tr>
-            <td>{{ p.nombre }}</td>
-            <td><span class="chip">{{ p.categoriaNombre }}</span></td>
-            <td>{{ p.precio | currency: 'PEN' : 'S/ ' }}</td>
-            <td>{{ p.stock }}</td>
+            <td>{{ prod.nombre }}</td>
+            <td><span class="chip">{{ prod.categoriaNombre }}</span></td>
+            <td>{{ prod.precio | currency: 'PEN' : 'S/ ' }}</td>
+            <td>{{ prod.stock }}</td>
             <td>
-              <span class="badge" [class.inactivo]="!p.estado">{{ p.estado ? 'Activo' : 'Inactivo' }}</span>
+              <span class="badge" [class.inactivo]="!prod.estado">{{ prod.estado ? 'Activo' : 'Inactivo' }}</span>
             </td>
             <td *appSiPermiso="'CATALOGO_ESCRIBIR'" class="acciones">
-              <a [routerLink]="[p.id, 'editar']" class="btn">Editar</a>
-              <button type="button" class="btn btn-peligro" [disabled]="!p.estado" (click)="darDeBaja(p)">
+              <a [routerLink]="[prod.id, 'editar']" class="btn">Editar</a>
+              <button type="button" class="btn btn-peligro" [disabled]="!prod.estado" (click)="darDeBaja(prod)">
                 Dar de baja
               </button>
             </td>
           </tr>
         } @empty {
-          <tr><td colspan="6" class="vacio">No hay productos para mostrar.</td></tr>
+          <tr><td colspan="6" class="vacio">No hay productos registrados.</td></tr>
         }
       </tbody>
     </table>
 
-    @if (resultado(); as r) {
-      <footer class="paginador">
-        <span>Página {{ r.pagina + 1 }} de {{ r.totalPaginas || 1 }} · {{ r.totalElementos }} productos</span>
-        <button type="button" class="btn" [disabled]="r.pagina === 0" (click)="irA(r.pagina - 1)">Anterior</button>
-        <button type="button" class="btn" [disabled]="r.ultima" (click)="irA(r.pagina + 1)">Siguiente</button>
-      </footer>
-    }
+    <app-paginador
+      [pagina]="p.pagina"
+      [totalPaginas]="p.totalPaginas"
+      [totalElementos]="p.totalElementos"
+      [tamanio]="p.tamanio"
+      [tamanios]="[10, 20, 50, 100]"
+      (cambioPagina)="irAPagina($event)"
+      (cambioTamanio)="cambiarTamanio($event)"
+    />
+  } @else if (productos.isLoading()) {
+    <p>Cargando productos…</p>
   }
 </section>

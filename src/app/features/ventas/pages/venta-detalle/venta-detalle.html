@@ -1,6 +1,6 @@
 <section class="page">
   @if (nueva()) {
-    <div class="exito no-imprimir">Venta registrada correctamente.</div>
+    <div class="exito no-imprimir" role="status">Venta N.º {{ numero() }} registrada correctamente.</div>
   }
   @if (error()) {
     <div class="alerta">{{ error() }}</div>
