@@ -30,7 +30,7 @@
   @if (pag(); as p) {
     <table class="tabla" data-testid="tabla-auditoria" [class.recargando]="eventos.isLoading()">
       <thead>
-        <tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Entidad</th><th>Detalle</th><th>Código</th></tr>
+        <tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Entidad</th><th>Id</th><th>Detalle</th><th>Código</th></tr>
       </thead>
       <tbody>
         @for (e of p.contenido; track e.id) {
@@ -38,12 +38,13 @@
             <td>{{ e.fecha | date: 'dd/MM/yyyy HH:mm:ss' }}</td>
             <td>{{ e.usuario }}</td>
             <td><span class="chip" [class.fallo]="e.accion === 'LOGIN_FALLIDO'">{{ e.accion }}</span></td>
-            <td>{{ e.entidad }}{{ e.entidadId ? ' #' + e.entidadId : '' }}</td>
+            <td>{{ e.entidad }}</td>
+            <td>{{ e.entidadId ?? '—' }}</td>
             <td>{{ e.detalle }}</td>
             <td><code>{{ e.requestId }}</code></td>
           </tr>
         } @empty {
-          <tr><td colspan="6" class="vacio">No hay eventos con esos filtros.</td></tr>
+          <tr><td colspan="7" class="vacio">No hay eventos con esos filtros.</td></tr>
         }
       </tbody>
     </table>
