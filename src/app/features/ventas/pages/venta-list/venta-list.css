@@ -11,3 +11,4 @@
   .paginador { justify-content: flex-start; }
   .paginador .solo-impresion { display: inline; }
 }
+.recargando { opacity: 0.6; transition: opacity 0.15s; }

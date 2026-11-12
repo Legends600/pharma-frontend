@@ -1,0 +1,22 @@
+.paginador {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+.resumen {
+  margin-right: auto;
+  color: #5b6475;
+}
+label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+select.input {
+  width: auto;
+}
+@media print {
+  .paginador { display: none; }
+}

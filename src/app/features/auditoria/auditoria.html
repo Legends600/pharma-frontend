@@ -1,0 +1,61 @@
+<section class="page">
+  <header class="page-header">
+    <h2>Auditoría</h2>
+  </header>
+
+  <div class="card filtros">
+    <label>
+      Usuario
+      <input class="input" type="search" [value]="usuario()" placeholder="vendedor"
+             (change)="filtrar('usuario', $any($event.target).value)" />
+    </label>
+    <label>
+      Acción
+      <select class="input" (change)="filtrar('accion', $any($event.target).value)">
+        <option value="" [selected]="!accion()">Todas</option>
+        @for (a of acciones; track a) {
+          <option [value]="a" [selected]="a === accion()">{{ a }}</option>
+        }
+      </select>
+    </label>
+    <label>Desde <input class="input" type="date" [value]="desde()" (change)="filtrar('desde', $any($event.target).value)" /></label>
+    <label>Hasta <input class="input" type="date" [value]="hasta()" (change)="filtrar('hasta', $any($event.target).value)" /></label>
+    <button type="button" class="btn" (click)="limpiar()">Limpiar</button>
+  </div>
+
+  @if (error(); as e) {
+    <div class="alerta" role="alert">{{ e }}</div>
+  }
+
+  @if (pag(); as p) {
+    <table class="tabla" data-testid="tabla-auditoria" [class.recargando]="eventos.isLoading()">
+      <thead>
+        <tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Entidad</th><th>Detalle</th><th>Código</th></tr>
+      </thead>
+      <tbody>
+        @for (e of p.contenido; track e.id) {
+          <tr>
+            <td>{{ e.fecha | date: 'dd/MM/yyyy HH:mm:ss' }}</td>
+            <td>{{ e.usuario }}</td>
+            <td><span class="chip" [class.fallo]="e.accion === 'LOGIN_FALLIDO'">{{ e.accion }}</span></td>
+            <td>{{ e.entidad }}{{ e.entidadId ? ' #' + e.entidadId : '' }}</td>
+            <td>{{ e.detalle }}</td>
+            <td><code>{{ e.requestId }}</code></td>
+          </tr>
+        } @empty {
+          <tr><td colspan="6" class="vacio">No hay eventos con esos filtros.</td></tr>
+        }
+      </tbody>
+    </table>
+    <app-paginador
+      [pagina]="p.pagina"
+      [totalPaginas]="p.totalPaginas"
+      [totalElementos]="p.totalElementos"
+      [tamanio]="p.tamanio"
+      (cambioPagina)="irA($event)"
+      (cambioTamanio)="cambiarTamanio($event)"
+    />
+  } @else if (eventos.isLoading()) {
+    <p>Cargando eventos…</p>
+  }
+</section>
