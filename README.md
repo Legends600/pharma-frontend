@@ -121,3 +121,17 @@ También puede recompilar el commit anterior con `git checkout <commit> && ng bu
 1. **HTTPS en Nginx (prioridad alta).** El token y la contraseña viajan por la red de cada local y entre locales. Sin cifrado, cualquiera en esa red puede leerlos.
 2. **Un solo despliegue central con copias de seguridad de Oracle (prioridad alta).** Los tres locales deben ver el mismo stock. Con el Redis y el Oracle centrales, una venta en un local invalida la caché para todos.
 3. **Alertas sobre `/actuator/health` (prioridad media).** Sondear cada minuto y avisar a soporte. El vendedor puede dictar el código de seguimiento que muestra la SPA para que soporte localice la petición en el log.
+
+## Pruebas end-to-end (Playwright)
+
+Requisitos: PharmaBackend en `:8080` con Oracle y Redis en marcha, y los datos de ejemplo del curso (cliente «Mamani», productos «Paracetamol», «Ibuprofeno» y «Gasa» con stock). La configuración levanta `ng serve` si no está corriendo.
+
+```bash
+npm ci
+npx playwright install chromium
+npx playwright test                                   # 15 pruebas (E2E-01 a E2E-15)
+npx playwright test --repeat-each=3 --reporter=list,html   # estabilidad: tres corridas seguidas
+npx playwright show-report                            # informe HTML con trazas de los fallos
+```
+
+Un solo worker y `retries: 0`: una prueba inestable se registra como incidencia y se corrige, no se reintenta. Las pruebas bajan el stock de los productos de ejemplo; para la demostración, ejecutar `docs/sql/restablecer_demo.sql` del backend. Resultados y registro de incidencias: `docs/resultados-pruebas.md` y `docs/incidencias.md` en PharmaBackend.
