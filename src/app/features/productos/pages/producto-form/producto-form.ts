@@ -1,5 +1,6 @@
 import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -12,7 +13,7 @@ import { ProductoService } from '../../services/producto-service';
 
 @Component({
   selector: 'app-producto-form',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, DatePipe],
   templateUrl: './producto-form.html',
   styleUrl: './producto-form.css',
 })
@@ -58,6 +59,9 @@ export class ProductoForm implements OnInit {
     return !!elegida && !elegida.estado;
   });
 
+  /** Columnas de auditoría del producto que se edita (quién lo creó y lo modificó). */
+  protected readonly auditoria = signal<{ creadoPor: string | null; modificadoPor: string | null; fecha: string | null } | null>(null);
+
   protected esEdicion(): boolean {
     return !!this.id();
   }
@@ -73,6 +77,11 @@ export class ProductoForm implements OnInit {
         next: ({ categorias, producto }) => {
           this.categorias.set(categorias);
           this.categoriaOriginal.set(producto.categoriaId);
+          this.auditoria.set({
+            creadoPor: producto.creadoPor,
+            modificadoPor: producto.modificadoPor,
+            fecha: producto.fechaModificacion ?? producto.fechaCreacion,
+          });
           this.form.setValue({
             nombre: producto.nombre,
             precio: producto.precio,

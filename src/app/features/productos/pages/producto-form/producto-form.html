@@ -1,5 +1,13 @@
 <section class="page">
   <h2>{{ esEdicion() ? 'Editar producto' : 'Nuevo producto' }}</h2>
+  @if (auditoria(); as a) {
+    <p class="auditoria" data-testid="auditoria-producto">
+      Creado por {{ a.creadoPor ?? '(sin registro)' }}
+      @if (a.modificadoPor) {
+        · Modificado por {{ a.modificadoPor }} el {{ a.fecha | date: 'dd/MM/yyyy HH:mm' }}
+      }
+    </p>
+  }
 
   @if (error()) {
     <div class="alerta">{{ error() }}</div>
