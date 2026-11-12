@@ -19,5 +19,6 @@ export async function iniciarSesion(
   await page.getByLabel('Usuario').fill(usuario);
   await page.getByLabel('Contraseña', { exact: true }).fill(clave);
   await page.getByRole('button', { name: 'Ingresar' }).click();
-  await expect(page.getByRole('button', { name: 'Cerrar sesión' })).toBeVisible();
+  // exact: con el aviso de expiración visible también existe «Cerrar sesión ahora» (INC-05)
+  await expect(page.getByRole('button', { name: 'Cerrar sesión', exact: true })).toBeVisible();
 }
